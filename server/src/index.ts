@@ -7,6 +7,8 @@ import authRoutes from './routes/auth';
 import recurringTaskRoutes from './routes/recurring-tasks';
 import taskRoutes from './routes/tasks';
 import shiftRoutes from './routes/shifts';
+import shoppingRoutes from './routes/shopping';
+import incidentRoutes from './routes/incidents';
 
 const app = express();
 const httpServer = createServer(app);
@@ -22,6 +24,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/recurring-tasks', recurringTaskRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/shifts', shiftRoutes);
+app.use('/api/shopping', shoppingRoutes);
+app.use('/api/incidents', incidentRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
