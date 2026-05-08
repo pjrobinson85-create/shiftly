@@ -1,0 +1,148 @@
+// Shiftly — Support worker shift task management app
+// Database schema for PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  FAMILY
+  WORKER
+}
+
+enum TaskPriority {
+  NORMAL
+  URGENT
+}
+
+// Users (family members and support workers)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // bcrypt hashed
+  name      String
+  role      UserRole @default(WORKER)
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasksCreated       TaskInstance[]    @relation("TaskCreator")
+  tasksCompleted     TaskInstance[]    @relation("TaskCompleter")
+  shiftNotes         ShiftNote[]
+  shoppingListItems  ShoppingListItem[]
+  incidents          Incident[]
+}
+
+// Recurring task definitions (daily, weekly schedules)
+model RecurringTask {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  dayOfWeek   Int?     // 0=Sunday, 6=Saturday. NULL = daily
+  time        String?  // e.g., "09:00" for morning tasks
+  priority    TaskPriority @default(NORMAL)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  instances   TaskInstance[]
+}
+
+// Individual task instances (generated from recurring or created ad-hoc)
+model TaskInstance {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  priority    TaskPriority @default(NORMAL)
+  completed   Boolean      @default(false)
+  completedAt DateTime?
+  dueDate     DateTime     // when this task should be done
+  isRecurring Boolean      @default(false)
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  createdById   String?
+  createdBy     User?      @relation("TaskCreator", fields: [createdById], references: [id])
+
+  completedById String?
+  completedBy   User?      @relation("TaskCompleter", fields: [completedById], references: [id])
+
+  recurringTaskId String?
+  recurringTask   RecurringTask? @relation(fields: [recurringTaskId], references: [id])
+}
+
+// Shift notes (handover between shifts)
+model ShiftNote {
+  id          String   @id @default(uuid())
+  content     String
+  photos      String[] // array of photo URLs/paths
+  shiftDate   DateTime // which shift this note belongs to
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+// Shopping list
+model ShoppingList {
+  id          String   @id @default(uuid())
+  name        String   @default("Shopping List")
+  category    String?  // e.g., "groceries", "pharmacy", "household"
+  isRecurring Boolean  @default(false) // auto-repopulate when checked off
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       ShoppingListItem[]
+}
+
+model ShoppingListItem {
+  id          String   @id @default(uuid())
+  name        String
+  quantity    Int      @default(1)
+  completed   Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  listId      String
+  list        ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  addedById   String?
+  addedBy     User?      @relation(fields: [addedById], references: [id])
+}
+
+// Calendar events (synced from Google Calendar)
+model CalendarEvent {
+  id          String   @id @default(uuid())
+  googleId    String   @unique // Google Calendar event ID
+  title       String
+  startTime   DateTime
+  endTime     DateTime?
+  description String?
+  location    String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Incident reports
+model Incident {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  severity    String   // "low", "medium", "high"
+  photos      String[] // array of photo URLs/paths
+  occurredAt  DateTime // when the incident happened
+
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+}
