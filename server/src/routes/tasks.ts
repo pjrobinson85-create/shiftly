@@ -1,18 +1,10 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { AuthRequest, requireAuth } from '../middleware/auth';
+import { AuthRequest, requireAuth, requireRole } from '../middleware/auth';
+import prisma from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 router.use(requireAuth);
-
-interface CreateTaskBody {
-  title: string;
-  description?: string;
-  priority?: 'NORMAL' | 'URGENT';
-  dueDate: string;
-}
 
 // GET /api/tasks — list tasks for a date (default: today)
 router.get('/', async (req: AuthRequest, res) => {
@@ -28,7 +20,8 @@ router.get('/', async (req: AuthRequest, res) => {
         createdBy: { select: { id: true, name: true, role: true } },
         completedBy: { select: { id: true, name: true, role: true } },
       },
-      orderBy: [{ priority: 'asc' }, { dueDate: 'asc' }],
+      // FIX: 'desc' puts URGENT before NORMAL (alphabetical descending)
+      orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }],
     });
 
     res.json(tasks);
@@ -41,14 +34,21 @@ router.get('/', async (req: AuthRequest, res) => {
 // POST /api/tasks — create an ad-hoc task
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const body = req.body as { title: string; description?: string; priority?: 'NORMAL' | 'URGENT'; dueDate: string };
-    if (!body.title || !body.dueDate) {
-      return res.status(400).json({ error: 'Title and dueDate are required' });
-    }
+    const body = req.body as {
+      title: string;
+      description?: string;
+      priority?: 'NORMAL' | 'URGENT';
+      dueDate: string;
+    };
+
+    if (!body.title) return res.status(400).json({ error: 'Title is required' });
+    if (!body.dueDate) return res.status(400).json({ error: 'dueDate is required' });
 
     const task = await prisma.taskInstance.create({
       data: {
-        title: body.title, description: body.description, priority: body.priority,
+        title: body.title,
+        description: body.description,
+        priority: body.priority ?? 'NORMAL',
         dueDate: new Date(body.dueDate),
         isRecurring: false,
         createdById: req.user!.id,
@@ -66,7 +66,7 @@ router.post('/', async (req: AuthRequest, res) => {
   }
 });
 
-// PATCH /api/tasks/:id/complete — mark complete (WORKER)
+// PATCH /api/tasks/:id/complete — mark complete
 router.patch('/:id/complete', async (req: AuthRequest, res) => {
   try {
     const task = await prisma.taskInstance.update({
@@ -89,12 +89,10 @@ router.patch('/:id/complete', async (req: AuthRequest, res) => {
   }
 });
 
-// DELETE /api/tasks/:id — delete ad-hoc task (FAMILY only)
-router.delete('/:id', async (req: AuthRequest, res) => {
+// DELETE /api/tasks/:id — delete task (FAMILY only)
+// FIX: Use requireRole middleware for consistency instead of inline role check
+router.delete('/:id', requireRole('FAMILY'), async (req: AuthRequest, res) => {
   try {
-    if (req.user?.role !== 'FAMILY') {
-      return res.status(403).json({ error: 'Insufficient permissions' });
-    }
     await prisma.taskInstance.delete({ where: { id: req.params.id as string } });
     res.status(204).end();
   } catch (error) {

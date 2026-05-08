@@ -105,7 +105,7 @@ model ShoppingList {
 model ShoppingListItem {
   id          String   @id @default(uuid())
   name        String
-  quantity    Int      @default(1)
+  quantity    String   @default("1")
   completed   Boolean  @default(false)
 
   createdAt   DateTime @default(now())

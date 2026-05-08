@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'shiftly-dev-secret';
+import { JWT_SECRET } from '../lib/config';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -28,7 +27,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     req.user = decoded;
     next();
   } catch {
-    return res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
 

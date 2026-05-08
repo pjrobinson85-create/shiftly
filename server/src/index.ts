@@ -1,23 +1,38 @@
 import 'dotenv/config';
-import express from 'express';
+// Config is imported first — it throws immediately if required env vars are missing
+import { PORT, CLIENT_URL } from './lib/config';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth';
 import recurringTaskRoutes from './routes/recurring-tasks';
 import taskRoutes from './routes/tasks';
 import shiftRoutes from './routes/shifts';
 import shoppingRoutes from './routes/shopping';
 import incidentRoutes from './routes/incidents';
+import calendarRoutes from './routes/calendar';
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: { origin: process.env.CLIENT_URL || 'http://localhost:5173' },
-});
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+const corsOptions = { origin: CLIENT_URL };
+
+const io = new Server(httpServer, { cors: corsOptions });
+
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Rate limiting on auth endpoints to prevent brute-force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts, please try again later' },
+});
+app.use('/api/auth', authLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -26,17 +41,26 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/shifts', shiftRoutes);
 app.use('/api/shopping', shoppingRoutes);
 app.use('/api/incidents', incidentRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Global error handler — must be the last middleware registered.
+// Catches any error passed via next(err) or thrown in async routes
+// that aren't caught by their own try/catch.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 // Socket.io — real-time task updates
 io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);
 
-  // Join role-based room for targeted broadcasts
   socket.on('join-role', (role: string) => {
     socket.join(role);
   });
@@ -46,10 +70,9 @@ io.on('connection', (socket) => {
   });
 });
 
-// Export io for use in route handlers
-export { io };
+// Export for testing
+export { app, io };
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

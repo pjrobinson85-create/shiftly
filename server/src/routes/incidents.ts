@@ -1,16 +1,15 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { AuthRequest, requireAuth } from '../middleware/auth';
+import prisma from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 router.use(requireAuth);
 
 // GET /api/incidents — list incidents (optionally filter by date range)
 router.get('/', async (req: AuthRequest, res) => {
   try {
-    const where: any = {};
+    const where: { occurredAt?: { gte?: Date; lte?: Date } } = {};
     if (req.query.from) {
       where.occurredAt = { ...where.occurredAt, gte: new Date(req.query.from as string) };
     }
@@ -48,10 +47,20 @@ router.get('/:id', async (req: AuthRequest, res) => {
 // POST /api/incidents — create an incident report
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const body = req.body as { title: string; description: string; severity: 'low' | 'medium' | 'high'; occurredAt?: string; photos?: string[] };
+    const body = req.body as {
+      title: string;
+      description: string;
+      severity: 'low' | 'medium' | 'high';
+      occurredAt?: string;
+      photos?: string[];
+    };
 
     if (!body.title || !body.description || !body.severity) {
       return res.status(400).json({ error: 'Title, description, and severity are required' });
+    }
+
+    if (!['low', 'medium', 'high'].includes(body.severity)) {
+      return res.status(400).json({ error: 'severity must be low, medium, or high' });
     }
 
     const incident = await prisma.incident.create({
@@ -60,7 +69,7 @@ router.post('/', async (req: AuthRequest, res) => {
         description: body.description,
         severity: body.severity,
         occurredAt: body.occurredAt ? new Date(body.occurredAt) : new Date(),
-        photos: body.photos || [],
+        photos: body.photos ?? [],
         userId: req.user!.id,
       },
       include: { user: { select: { id: true, name: true } } },

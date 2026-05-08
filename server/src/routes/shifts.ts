@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { AuthRequest, requireAuth } from '../middleware/auth';
+import prisma from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 router.use(requireAuth);
 
@@ -27,7 +26,8 @@ router.get('/:date', async (req: AuthRequest, res) => {
           createdBy: { select: { id: true, name: true, role: true } },
           completedBy: { select: { id: true, name: true, role: true } },
         },
-        orderBy: [{ priority: 'asc' }, { dueDate: 'asc' }],
+        // FIX: 'desc' puts URGENT before NORMAL
+        orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }],
       }),
       prisma.calendarEvent.findMany({
         where: { startTime: { gte: startOfDay, lte: endOfDay } },
@@ -63,11 +63,13 @@ router.post('/:date/notes', async (req: AuthRequest, res) => {
     const [startOfDay] = parseDate(req.params.date as string);
     const { content } = req.body as { content: string };
 
-    if (!content) return res.status(400).json({ error: 'Content is required' });
+    if (!content?.trim()) {
+      return res.status(400).json({ error: 'Note content is required' });
+    }
 
     const note = await prisma.shiftNote.create({
       data: {
-        content,
+        content: content.trim(),
         shiftDate: startOfDay,
         photos: [],
         userId: req.user!.id,
