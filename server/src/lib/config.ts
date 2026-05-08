@@ -10,12 +10,17 @@ if (!process.env.JWT_SECRET) {
 
 export const JWT_SECRET = process.env.JWT_SECRET;
 
+// Optional separate secret for refresh tokens (defaults to JWT_SECRET)
+export const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || JWT_SECRET;
+
 export const PORT = parseInt(process.env.PORT || '3000', 10);
 
 export const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 export const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// JWT token expiry — 7 days gives shift workers a comfortable window
-// without forcing them to re-login mid-shift.
-export const JWT_EXPIRES_IN = '7d';
+// Access token — short-lived (15min) for API calls
+export const JWT_EXPIRES_IN = '15m';
+
+// Refresh token — long-lived (7d) stored in httpOnly cookie
+export const REFRESH_TOKEN_EXPIRES_IN = '7d';

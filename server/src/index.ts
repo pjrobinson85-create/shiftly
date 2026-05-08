@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { PORT, CLIENT_URL } from './lib/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import rateLimit from 'express-rate-limit';
@@ -23,6 +24,7 @@ const io = new Server(httpServer, { cors: corsOptions });
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
 
 // Rate limiting on auth endpoints to prevent brute-force attacks
 const authLimiter = rateLimit({

@@ -36,6 +36,19 @@ model User {
   shiftNotes         ShiftNote[]
   shoppingListItems  ShoppingListItem[]
   incidents          Incident[]
+  refreshTokens      RefreshToken[]
+}
+
+// JWT refresh tokens — short-lived access tokens (15min) + long-lived refresh tokens (7d, httpOnly cookie)
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique // hashed refresh token for DB storage
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime // when this refresh token expires
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // Recurring task definitions (daily, weekly schedules)
