@@ -1,5 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import { Navigate, Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import api from '../api/client';
 
 // Protected route wrapper — redirects to /login if not authenticated
 export function ProtectedRoute() {
@@ -55,14 +57,37 @@ export default function Dashboard() {
 
 function DashboardHome() {
   const { user } = useAuth();
+  const [stats, setStats] = useState<{ total: number; completed: number } | null>(null);
+
+  useEffect(() => {
+    api.get('/tasks').then(({ data }) => {
+      const tasks = data as Array<{ completed: boolean }>;
+      setStats({ total: tasks.length, completed: tasks.filter((t) => t.completed).length });
+    }).catch(() => {});
+  }, []);
+
+  const progressPct = stats ? Math.round((stats.completed / Math.max(stats.total, 1)) * 100) : 0;
+
   return (
     <div style={styles.homeCard}>
       <h2 style={{ margin: '0 0 0.5rem' }}>Dashboard</h2>
-      <p style={{ color: '#666' }}>
-        {user?.role === 'FAMILY'
-          ? 'Add tasks and recurring schedules for your support workers.'
-          : 'Your shift task list will appear here when tasks are assigned.'}
+      <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+        {user?.role === 'FAMILY'\n          ? 'Add tasks and recurring schedules for your support workers.'\n          : 'Your shift task list will appear here when tasks are assigned.'}
       </p>
+      <div style={styles.statsRow}>
+        <div style={styles.statCard}>
+          <div style={styles.statValue}>{stats?.total ?? '...'}</div>
+          <div style={styles.statLabel}>Today's Tasks</div>
+        </div>
+        <div style={styles.statCard}>
+          <div style={{ ...styles.statValue, color: '#16a34a' }}>{stats?.completed ?? 0}</div>
+          <div style={styles.statLabel}>Completed</div>
+        </div>
+        <div style={styles.statCard}>
+          <div style={{ ...styles.statValue, color: '#2563eb' }}>{progressPct}%</div>
+          <div style={styles.statLabel}>Progress</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -136,6 +161,30 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '12px',
     padding: '2rem',
     boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+  },
+  statsRow: {
+    display: 'flex',
+    gap: '1rem',
+    marginTop: '1rem',
+  },
+  statCard: {
+    flex: 1,
+    background: '#f8fafc',
+    borderRadius: '8px',
+    padding: '1rem',
+    textAlign: 'center' as const,
+  },
+  statValue: {
+    fontSize: '1.8rem',
+    fontWeight: 700,
+    color: '#111827',
+    marginBottom: '0.25rem',
+  },
+  statLabel: {
+    fontSize: '0.8rem',
+    color: '#6b7280',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.03em',
   },
   loading: {
     display: 'flex',

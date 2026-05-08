@@ -12,6 +12,8 @@ interface TaskInstance {
   completedAt?: string;
   dueDate: string;
   isRecurring: boolean;
+  createdBy?: { id: string; name: string; role: string };
+  completedBy?: { id: string; name: string; role: string };
 }
 
 let socket: Socket | null = null;
@@ -350,12 +352,13 @@ function TaskCard({ task, role, completing, onComplete, onDelete }: TaskCardProp
         <div style={styles.taskMeta}>
           {task.completed ? (
             <span style={styles.completedTime}>
-              Completed {task.completedAt
+              Completed by {task.completedBy?.name || 'someone'}{' '}
+              {task.completedAt
                 ? new Date(task.completedAt).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })
                 : ''}
             </span>
           ) : (
-            <span style={styles.dueTime}>Due {dueTime}</span>
+            <span style={styles.dueTime}>Due {dueTime}{task.createdBy?.name ? ` · by ${task.createdBy.name}` : ''}</span>
           )}
         </div>
       </div>

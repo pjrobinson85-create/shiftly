@@ -31,8 +31,8 @@ router.get('/', async (req: AuthRequest, res) => {
   }
 });
 
-// POST /api/tasks — create an ad-hoc task
-router.post('/', async (req: AuthRequest, res) => {
+// POST /api/tasks — create an ad-hoc task (FAMILY only)
+router.post('/', requireRole('FAMILY'), async (req: AuthRequest, res) => {
   try {
     const body = req.body as {
       title: string;
