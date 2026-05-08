@@ -8,10 +8,10 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth';
-import recurringTaskRoutes from './routes/recurring-tasks';
+import recurringTasksRouter from './routes/recurringTasks';
+import shoppingRouter from './routes/shopping';
 import taskRoutes from './routes/tasks';
 import shiftRoutes from './routes/shifts';
-import shoppingRoutes from './routes/shopping';
 import incidentRoutes from './routes/incidents';
 import calendarRoutes from './routes/calendar';
 
@@ -38,10 +38,10 @@ app.use('/api/auth', authLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/recurring-tasks', recurringTaskRoutes);
+app.use('/api/recurring-tasks', recurringTasksRouter);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/shifts', shiftRoutes);
-app.use('/api/shopping', shoppingRoutes);
+app.use('/api/shopping', shoppingRouter);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/calendar', calendarRoutes);
 

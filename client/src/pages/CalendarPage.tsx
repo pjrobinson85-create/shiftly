@@ -66,10 +66,9 @@ export default function CalendarPage() {
   async function fetchEvents() {
     setLoading(true);
     try {
-      // Try to fetch from shifts endpoint or a dedicated calendar endpoint
       const today = isoDate(new Date());
-      const { data } = await api.get(`/shifts/${today}`);
-      setEvents(data.calendarEvents || []);
+      const { data } = await api.get(`/calendar/events?date=${today}`);
+      setEvents(data as CalendarEvent[]);
       setBackendAvailable(true);
     } catch (err: any) {
       if (err.response?.status === 404 || err.code === 'ERR_NETWORK') {
