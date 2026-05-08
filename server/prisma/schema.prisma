@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 enum UserRole {
@@ -81,7 +81,7 @@ model TaskInstance {
 model ShiftNote {
   id          String   @id @default(uuid())
   content     String
-  photos      String[] // array of photo URLs/paths
+  photos      Json     // array of photo URLs/paths
   shiftDate   DateTime // which shift this note belongs to
   createdAt   DateTime @default(now())
 
@@ -138,7 +138,7 @@ model Incident {
   title       String
   description String
   severity    String   // "low", "medium", "high"
-  photos      String[] // array of photo URLs/paths
+  photos      Json     // array of photo URLs/paths
   occurredAt  DateTime // when the incident happened
 
   createdAt   DateTime @default(now())

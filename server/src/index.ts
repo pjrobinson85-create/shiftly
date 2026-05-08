@@ -4,6 +4,9 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import authRoutes from './routes/auth';
+import recurringTaskRoutes from './routes/recurring-tasks';
+import taskRoutes from './routes/tasks';
+import shiftRoutes from './routes/shifts';
 
 const app = express();
 const httpServer = createServer(app);
@@ -16,6 +19,9 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/recurring-tasks', recurringTaskRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/shifts', shiftRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

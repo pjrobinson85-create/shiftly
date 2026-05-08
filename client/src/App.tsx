@@ -1,25 +1,41 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import LoginPage from './components/Login';
+import Dashboard, { ProtectedRoute } from './components/Dashboard';
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<div style={styles.container}>Login page — coming soon</div>} />
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="*" element={<div style={styles.container}>404 — Page not found</div>} />
-    </Routes>
-  )
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Dashboard />}>
+            <Route index element={<Navigate to="/tasks" replace />} />
+            <Route path="tasks" element={<div style={styles.placeholder}>Tasks — coming soon</div>} />
+            <Route path="shopping" element={<div style={styles.placeholder}>Shopping List — coming soon</div>} />
+            <Route path="recurring" element={<div style={styles.placeholder}>Recurring Tasks — coming soon</div>} />
+            <Route path="calendar" element={<div style={styles.placeholder}>Calendar — coming soon</div>} />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </AuthProvider>
+  );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '100vh',
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-    fontSize: '1.5rem',
-    color: '#333',
+  placeholder: {
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '3rem',
+    textAlign: 'center',
+    color: '#666',
+    fontSize: '1.1rem',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   },
-}
+};
 
-export default App
+export default App;

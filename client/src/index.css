@@ -10,3 +10,17 @@ body {
   background: #f5f5f5;
   color: #1a1a1a;
 }
+
+input:focus, select:focus {
+  border-color: #2563eb !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+a:hover {
+  color: #fff !important;
+}
+
+button:hover:not(:disabled) {
+  opacity: 0.9;
+}
