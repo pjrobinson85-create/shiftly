@@ -54,16 +54,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('shiftly_token', data.token);
-    setToken(data.token);
+    localStorage.setItem('shiftly_token', data.accessToken);
+    setToken(data.accessToken);
     setUser(data.user);
   };
 
   const register = async (data: RegisterData) => {
-    await api.post('/auth/register', data);
+    const response = await api.post('/auth/register', data);
+    // New backend returns accessToken directly on register
+    if (response.data.accessToken) {
+      localStorage.setItem('shiftly_token', response.data.accessToken);
+      setToken(response.data.accessToken);
+      setUser(response.data.user);
+    }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout'); // revoke refresh token on server
+    } catch {
+      // ignore — still clear local state
+    }
     localStorage.removeItem('shiftly_token');
     setToken(null);
     setUser(null);

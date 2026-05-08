@@ -24,8 +24,7 @@ export default function LoginPage() {
         navigate('/');
       } else {
         await register({ email, password, name, role });
-        setMode('login');
-        setError('Account created — please log in');
+        navigate('/');
       }
     } catch (err: any) {
       const msg = err.response?.data?.error || 'Something went wrong';
