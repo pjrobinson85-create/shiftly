@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api/client';
 import { io, Socket } from 'socket.io-client';
 
@@ -34,8 +35,16 @@ function formatDisplayDate(dateStr: string): string {
   return d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
+// Priority color constants — consistent across the app
+const PRIORITY_COLORS = {
+  NORMAL: '#2563eb',    // blue
+  URGENT: '#dc2626',    // red
+  COMPLETED: '#16a34a', // green
+};
+
 export default function TasksPage() {
   const { user } = useAuth();
+  const { dark } = useTheme();
   const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
   const [tasks, setTasks] = useState<TaskInstance[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +63,6 @@ export default function TasksPage() {
     setError('');
     try {
       const { data } = await api.get<TaskInstance[]>(`/tasks?date=${selectedDate}`);
-      // Sort: URGENT first, then by dueDate, completed last
       const sorted = [...data].sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         if (a.priority !== b.priority) return a.priority === 'URGENT' ? -1 : 1;
@@ -179,10 +187,10 @@ export default function TasksPage() {
   return (
     <div style={styles.page}>
       {/* Date nav */}
-      <div style={styles.dateNav}>
-        <button style={styles.navBtn} onClick={() => shiftDay(-1)}>‹</button>
+      <div style={styles.dateNav(dark)}>
+        <button style={styles.navBtn(dark)} onClick={() => shiftDay(-1)}>‹</button>
         <div style={styles.dateCenter}>
-          <div style={styles.dateLabel}>
+          <div style={styles.dateLabel(dark)}>
             {isToday ? 'Today' : formatDisplayDate(selectedDate)}
           </div>
           {!isToday && (
@@ -191,13 +199,13 @@ export default function TasksPage() {
             </button>
           )}
         </div>
-        <button style={styles.navBtn} onClick={() => shiftDay(1)}>›</button>
+        <button style={styles.navBtn(dark)} onClick={() => shiftDay(1)}>›</button>
       </div>
 
       {/* Progress bar */}
       {totalCount > 0 && (
         <div style={styles.progressWrap}>
-          <div style={styles.progressBar}>
+          <div style={styles.progressBar(dark)}>
             <div style={{ ...styles.progressFill, width: `${progressPct}%` }} />
           </div>
           <span style={styles.progressLabel}>{completedCount}/{totalCount} tasks done</span>
@@ -206,7 +214,7 @@ export default function TasksPage() {
 
       {/* Header row */}
       <div style={styles.headerRow}>
-        <h2 style={styles.pageTitle}>Tasks</h2>
+        <h2 style={styles.pageTitle(dark)}>Tasks</h2>
         {user?.role === 'FAMILY' && (
           <button style={styles.addBtn} onClick={() => setShowAddForm(!showAddForm)}>
             {showAddForm ? '✕ Cancel' : '+ Add Task'}
@@ -216,9 +224,9 @@ export default function TasksPage() {
 
       {/* Add task form */}
       {showAddForm && user?.role === 'FAMILY' && (
-        <form onSubmit={addTask} style={styles.addForm}>
+        <form onSubmit={addTask} style={styles.addForm(dark)}>
           <input
-            style={styles.input}
+            style={styles.input(dark)}
             placeholder="Task title *"
             value={newTitle}
             onChange={e => setNewTitle(e.target.value)}
@@ -226,12 +234,12 @@ export default function TasksPage() {
             autoFocus
           />
           <input
-            style={styles.input}
+            style={styles.input(dark)}
             placeholder="Description (optional)"
             value={newDesc}
             onChange={e => setNewDesc(e.target.value)}
           />
-          <div style={styles.priorityRow}>
+          <div style={styles.priorityRow(dark)}>
             <label style={styles.priorityLabel}>
               <input
                 type="radio"
@@ -263,9 +271,9 @@ export default function TasksPage() {
 
       {/* Task list */}
       {loading ? (
-        <div style={styles.emptyState}>Loading tasks...</div>
+        <div style={styles.emptyState(dark)}>Loading tasks...</div>
       ) : tasks.length === 0 ? (
-        <div style={styles.emptyState}>
+        <div style={styles.emptyState(dark)}>
           <div style={styles.emptyIcon}>✓</div>
           <div>No tasks for this day</div>
           {user?.role === 'FAMILY' && (
@@ -279,6 +287,7 @@ export default function TasksPage() {
               key={task.id}
               task={task}
               role={user?.role}
+              dark={dark}
               completing={completing === task.id}
               onComplete={() => completeTask(task.id)}
               onDelete={() => deleteTask(task.id)}
@@ -293,13 +302,16 @@ export default function TasksPage() {
 interface TaskCardProps {
   task: TaskInstance;
   role?: string;
+  dark: boolean;
   completing: boolean;
   onComplete: () => void;
   onDelete: () => void;
 }
 
-function TaskCard({ task, role, completing, onComplete, onDelete }: TaskCardProps) {
+function TaskCard({ task, role, dark, completing, onComplete, onDelete }: TaskCardProps) {
   const isUrgent = task.priority === 'URGENT';
+  const borderColor = task.completed ? PRIORITY_COLORS.COMPLETED : (isUrgent ? PRIORITY_COLORS.URGENT : PRIORITY_COLORS.NORMAL);
+
   const dueTime = new Date(task.dueDate).toLocaleTimeString('en-AU', {
     hour: '2-digit',
     minute: '2-digit',
@@ -307,14 +319,17 @@ function TaskCard({ task, role, completing, onComplete, onDelete }: TaskCardProp
 
   return (
     <div style={{
-      ...styles.taskCard,
+      ...styles.taskCard(dark),
+      borderLeft: `4px solid ${borderColor}`,
       ...(task.completed ? styles.taskCompleted : {}),
-      ...(isUrgent && !task.completed ? styles.taskUrgent : {}),
     }}>
       {/* Complete button */}
       {!task.completed ? (
         <button
-          style={{ ...styles.completeBtn, ...(completing ? styles.completeBtnLoading : {}) }}
+          style={{
+            ...styles.completeBtn(borderColor),
+            ...(completing ? styles.completeBtnLoading : {}),
+          }}
           onClick={onComplete}
           disabled={completing}
           title="Mark complete"
@@ -322,14 +337,14 @@ function TaskCard({ task, role, completing, onComplete, onDelete }: TaskCardProp
           {completing ? '...' : '✓'}
         </button>
       ) : (
-        <div style={styles.completedIcon}>✓</div>
+        <div style={{ ...styles.completedIcon, background: PRIORITY_COLORS.COMPLETED }}>✓</div>
       )}
 
       {/* Task info */}
       <div style={styles.taskInfo}>
         <div style={styles.taskTitleRow}>
           <span style={{
-            ...styles.taskTitle,
+            ...styles.taskTitle(dark),
             ...(task.completed ? styles.taskTitleDone : {}),
           }}>
             {task.title}
@@ -343,7 +358,7 @@ function TaskCard({ task, role, completing, onComplete, onDelete }: TaskCardProp
         </div>
         {task.description && (
           <div style={{
-            ...styles.taskDesc,
+            ...styles.taskDesc(dark),
             ...(task.completed ? styles.taskDescDone : {}),
           }}>
             {task.description}
@@ -365,93 +380,93 @@ function TaskCard({ task, role, completing, onComplete, onDelete }: TaskCardProp
 
       {/* Delete (FAMILY only) */}
       {role === 'FAMILY' && (
-        <button style={styles.deleteBtn} onClick={onDelete} title="Delete task">✕</button>
+        <button style={styles.deleteBtn(dark)} onClick={onDelete} title="Delete task">✕</button>
       )}
     </div>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  page: {
+const styles: Record<string, (dark?: boolean) => React.CSSProperties | undefined> = {
+  page: () => ({
     maxWidth: '680px',
     margin: '0 auto',
-  },
-  dateNav: {
+  }),
+  dateNav: (dark) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    background: '#fff',
+    background: dark ? '#1e293b' : '#fff',
     borderRadius: '12px',
     padding: '0.75rem 1rem',
     marginBottom: '1rem',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-  },
-  navBtn: {
+    boxShadow: `0 1px 4px ${dark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)'}`,
+  }),
+  navBtn: (dark) => ({
     background: 'none',
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${dark ? '#475569' : '#e5e7eb'}`,
     borderRadius: '8px',
     width: '36px',
     height: '36px',
     fontSize: '1.3rem',
     cursor: 'pointer',
-    color: '#374151',
+    color: dark ? '#e2e8f0' : '#374151',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  dateCenter: {
+  }),
+  dateCenter: () => ({
     textAlign: 'center',
-  },
-  dateLabel: {
+  }),
+  dateLabel: (dark) => ({
     fontWeight: 600,
     fontSize: '1rem',
-    color: '#111827',
-  },
-  todayBtn: {
+    color: dark ? '#f1f5f9' : '#111827',
+  }),
+  todayBtn: () => ({
     background: 'none',
     border: 'none',
     color: '#2563eb',
     cursor: 'pointer',
     fontSize: '0.8rem',
     padding: '2px 0',
-  },
-  progressWrap: {
+  }),
+  progressWrap: () => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
     marginBottom: '1rem',
-  },
-  progressBar: {
+  }),
+  progressBar: (dark) => ({
     flex: 1,
     height: '8px',
-    background: '#e5e7eb',
+    background: dark ? '#334155' : '#e5e7eb',
     borderRadius: '99px',
     overflow: 'hidden',
-  },
-  progressFill: {
+  }),
+  progressFill: () => ({
     height: '100%',
-    background: '#16a34a',
+    background: PRIORITY_COLORS.COMPLETED,
     borderRadius: '99px',
     transition: 'width 0.3s ease',
-  },
-  progressLabel: {
+  }),
+  progressLabel: () => ({
     fontSize: '0.8rem',
     color: '#6b7280',
     whiteSpace: 'nowrap',
-  },
-  headerRow: {
+  }),
+  headerRow: () => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: '1rem',
-  },
-  pageTitle: {
+  }),
+  pageTitle: (dark) => ({
     fontSize: '1.3rem',
     fontWeight: 700,
-    color: '#111827',
+    color: dark ? '#f1f5f9' : '#111827',
     margin: 0,
-  },
-  addBtn: {
+  }),
+  addBtn: () => ({
     background: '#2563eb',
     color: '#fff',
     border: 'none',
@@ -460,39 +475,41 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.9rem',
     fontWeight: 600,
     cursor: 'pointer',
-  },
-  addForm: {
-    background: '#fff',
+  }),
+  addForm: (dark) => ({
+    background: dark ? '#1e293b' : '#fff',
     borderRadius: '12px',
     padding: '1.25rem',
     marginBottom: '1rem',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    boxShadow: `0 1px 4px ${dark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)'}`,
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-  },
-  input: {
+  }),
+  input: (dark) => ({
     padding: '0.6rem 0.8rem',
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${dark ? '#475569' : '#e5e7eb'}`,
     borderRadius: '8px',
     fontSize: '0.95rem',
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
-  },
-  priorityRow: {
+    background: dark ? '#0f172a' : '#fff',
+    color: dark ? '#e2e8f0' : '#111827',
+  }),
+  priorityRow: (dark) => ({
     display: 'flex',
     gap: '1.5rem',
     fontSize: '0.9rem',
-    color: '#374151',
-  },
-  priorityLabel: {
+    color: dark ? '#e2e8f0' : '#374151',
+  }),
+  priorityLabel: () => ({
     display: 'flex',
     alignItems: 'center',
     cursor: 'pointer',
     gap: '0.25rem',
-  },
-  submitBtn: {
+  }),
+  submitBtn: () => ({
     background: '#2563eb',
     color: '#fff',
     border: 'none',
@@ -501,151 +518,139 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.95rem',
     fontWeight: 600,
     cursor: 'pointer',
-  },
-  error: {
+  }),
+  error: () => ({
     background: '#fef2f2',
     color: '#dc2626',
     padding: '0.75rem 1rem',
     borderRadius: '8px',
-    fontSize: '0.9rem',
     marginBottom: '1rem',
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: '3rem 2rem',
-    background: '#fff',
-    borderRadius: '12px',
-    color: '#6b7280',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-  },
-  emptyIcon: {
-    fontSize: '2.5rem',
-    color: '#16a34a',
+    fontSize: '0.9rem',
+  }),
+  emptyState: (dark) => ({
+    textAlign: 'center' as const,
+    padding: '3rem 1rem',
+    color: dark ? '#94a3b8' : '#6b7280',
+  }),
+  emptyIcon: () => ({
+    fontSize: '3rem',
     marginBottom: '0.5rem',
-  },
-  emptyHint: {
+    color: '#d1d5db',
+  }),
+  emptyHint: () => ({
     fontSize: '0.85rem',
     marginTop: '0.5rem',
     color: '#9ca3af',
-  },
-  taskList: {
+  }),
+  taskList: () => ({
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.6rem',
-  },
-  taskCard: {
-    background: '#fff',
-    borderRadius: '12px',
-    padding: '1rem',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-    display: 'flex',
-    alignItems: 'flex-start',
     gap: '0.75rem',
-    border: '2px solid transparent',
-    transition: 'opacity 0.2s',
-  },
-  taskCompleted: {
-    opacity: 0.55,
-    background: '#f9fafb',
-  },
-  taskUrgent: {
-    borderColor: '#fca5a5',
-    background: '#fff8f8',
-  },
-  completeBtn: {
-    width: '44px',
-    height: '44px',
-    minWidth: '44px',
+  }),
+  taskCard: (dark) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '1rem',
+    background: dark ? '#1e293b' : '#fff',
+    borderRadius: '8px',
+    boxShadow: `0 1px 3px ${dark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)'}`,
+  }),
+  taskCompleted: () => ({
+    opacity: 0.6,
+  }),
+  completeBtn: (borderColor: string) => ({
+    width: '32px',
+    height: '32px',
     borderRadius: '50%',
-    background: '#f0fdf4',
-    border: '2px solid #16a34a',
-    color: '#16a34a',
-    fontSize: '1.2rem',
+    border: `2px solid ${borderColor}`,
+    background: 'transparent',
+    color: borderColor,
+    fontSize: '1rem',
     fontWeight: 700,
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    transition: 'background 0.15s',
     flexShrink: 0,
-  },
-  completeBtnLoading: {
-    opacity: 0.6,
-    cursor: 'not-allowed',
-  },
-  completedIcon: {
-    width: '44px',
-    height: '44px',
-    minWidth: '44px',
+  }),
+  completeBtnLoading: () => ({
+    opacity: 0.5,
+  }),
+  completedIcon: () => ({
+    width: '32px',
+    height: '32px',
     borderRadius: '50%',
-    background: '#16a34a',
+    background: PRIORITY_COLORS.COMPLETED,
     color: '#fff',
-    fontSize: '1.2rem',
+    fontSize: '1rem',
+    fontWeight: 700,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-  },
-  taskInfo: {
+  }),
+  taskInfo: () => ({
     flex: 1,
     minWidth: 0,
-  },
-  taskTitleRow: {
+  }),
+  taskTitleRow: () => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    flexWrap: 'wrap',
-  },
-  taskTitle: {
-    fontWeight: 600,
+    flexWrap: 'wrap' as const,
+  }),
+  taskTitle: (dark) => ({
     fontSize: '1rem',
-    color: '#111827',
-  },
-  taskTitleDone: {
+    fontWeight: 600,
+    color: dark ? '#f1f5f9' : '#111827',
+  }),
+  taskTitleDone: () => ({
     textDecoration: 'line-through',
-    color: '#9ca3af',
-  },
-  urgentBadge: {
-    background: '#fee2e2',
-    color: '#dc2626',
+    opacity: 0.7,
+  }),
+  urgentBadge: () => ({
+    background: PRIORITY_COLORS.URGENT,
+    color: '#fff',
+    padding: '0.15rem 0.5rem',
+    borderRadius: '4px',
     fontSize: '0.7rem',
     fontWeight: 700,
-    padding: '2px 6px',
-    borderRadius: '4px',
-    letterSpacing: '0.05em',
-  },
-  recurringBadge: {
-    color: '#6b7280',
-    fontSize: '0.85rem',
-    title: 'Recurring task',
-  },
-  taskDesc: {
-    fontSize: '0.875rem',
-    color: '#4b5563',
-    marginTop: '0.2rem',
-  },
-  taskDescDone: {
+    textTransform: 'uppercase' as const,
+  }),
+  recurringBadge: () => ({
     color: '#9ca3af',
-  },
-  taskMeta: {
-    marginTop: '0.35rem',
-  },
-  dueTime: {
+    fontSize: '1rem',
+  }),
+  taskDesc: (dark) => ({
+    fontSize: '0.85rem',
+    color: dark ? '#94a3b8' : '#6b7280',
+    marginTop: '0.25rem',
+  }),
+  taskDescDone: () => ({
+    textDecoration: 'line-through',
+  }),
+  taskMeta: () => ({
     fontSize: '0.8rem',
-    color: '#6b7280',
-  },
-  completedTime: {
+    color: '#9ca3af',
+    marginTop: '0.25rem',
+  }),
+  completedTime: () => ({
     fontSize: '0.8rem',
-    color: '#16a34a',
-  },
-  deleteBtn: {
+    color: '#9ca3af',
+  }),
+  dueTime: () => ({
+    fontSize: '0.8rem',
+    color: '#9ca3af',
+  }),
+  deleteBtn: (dark) => ({
     background: 'none',
     border: 'none',
-    color: '#9ca3af',
+    color: dark ? '#ef4444' : '#dc2626',
     cursor: 'pointer',
     fontSize: '1rem',
-    padding: '4px',
+    padding: '0.25rem',
+    opacity: 0.6,
     flexShrink: 0,
-    lineHeight: 1,
-  },
+  }),
 };

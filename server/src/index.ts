@@ -8,7 +8,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth';
-import recurringTasksRouter from './routes/recurringTasks';
+import recurringTasksRouter from './routes/recurring-tasks';
 import shoppingRouter from './routes/shopping';
 import taskRoutes from './routes/tasks';
 import shiftRoutes from './routes/shifts';
