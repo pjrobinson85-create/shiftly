@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
+  base: '/shiftly/',
   plugins: [react()],
   resolve: {
     alias: {
@@ -12,14 +13,17 @@ export default defineConfig({
   server: {
     host: true, // allow LAN access (phone, tablet, etc.)
     port: 5173,
+    allowedHosts: ['vikunja.ubuntu-hermes.com'],
     proxy: {
-      '/api': {
+      '/shiftly/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/shiftly/, ''),
       },
-      '/socket.io': {
+      '/shiftly/socket.io': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/shiftly/, ''),
       },
     },
   },

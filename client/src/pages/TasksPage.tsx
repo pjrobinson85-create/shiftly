@@ -21,7 +21,10 @@ let socket: Socket | null = null;
 
 function getSocket() {
   if (!socket) {
-    socket = io('/', { autoConnect: false });
+    socket = io(window.location.origin, {
+      path: '/shiftly/socket.io',
+      autoConnect: false,
+    });
   }
   return socket;
 }

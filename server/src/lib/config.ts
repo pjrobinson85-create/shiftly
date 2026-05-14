@@ -19,8 +19,8 @@ export const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 export const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Access token — short-lived (15min) for API calls
-export const JWT_EXPIRES_IN = '15m';
+// Access token — 6h so you stay logged in during a shift
+export const JWT_EXPIRES_IN = '6h';
 
 // Refresh token — long-lived (7d) stored in httpOnly cookie
 export const REFRESH_TOKEN_EXPIRES_IN = '7d';
