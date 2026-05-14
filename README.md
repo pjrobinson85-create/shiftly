@@ -44,4 +44,14 @@ cd server && npm run dev    # Backend on :3000
 cd client && npm run dev    # Frontend on :5173
 ```
 
+## Deployment
+
+Deployed on Ubuntu server behind nginx reverse proxy at `/shiftly` subpath (coexists with Vikunja task manager at `/`). See [CONTRIBUTING.md](CONTRIBUTING.md) → Deployment section for nginx config.
+
+**Current instance:** https://192.168.1.238/shiftly
+
+## Active Issues
+
+- [#38](https://github.com/pjrobinson85-create/shiftly/issues/38) — Tasks page renders blank after subpath routing setup (in progress)
+
 Full setup guide → [CONTRIBUTING.md](CONTRIBUTING.md)
