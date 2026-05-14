@@ -188,7 +188,7 @@ export default function TasksPage() {
   }
 
   return (
-    <div style={styles.page}>
+    <div style={styles.page()}>
       {/* Date nav */}
       <div style={styles.dateNav(dark)}>
         <button style={styles.navBtn(dark)} onClick={() => shiftDay(-1)}>‹</button>
@@ -324,14 +324,14 @@ function TaskCard({ task, role, dark, completing, onComplete, onDelete }: TaskCa
     <div style={{
       ...styles.taskCard(dark),
       borderLeft: `4px solid ${borderColor}`,
-      ...(task.completed ? styles.taskCompleted : {}),
+      ...(task.completed ? styles.taskCompleted() : {}),
     }}>
       {/* Complete button */}
       {!task.completed ? (
         <button
           style={{
             ...styles.completeBtn(borderColor),
-            ...(completing ? styles.completeBtnLoading : {}),
+            ...(completing ? styles.completeBtnLoading() : {}),
           }}
           onClick={onComplete}
           disabled={completing}
