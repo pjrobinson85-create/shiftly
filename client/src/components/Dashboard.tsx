@@ -2,6 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 import api from '../api/client';
 
 interface TaskInstance {
@@ -174,7 +175,7 @@ function TodayTaskCard({ task, dark }: { task: TaskInstance; dark: boolean }) {
   );
 }
 
-const styles: Record<string, (dark?: boolean) => React.CSSProperties | undefined> = {
+const styles = {
   layout: (dark) => ({
     display: 'flex',
     minHeight: '100vh',
@@ -337,4 +338,4 @@ const styles: Record<string, (dark?: boolean) => React.CSSProperties | undefined
     height: '100vh',
     color: '#666',
   },
-};
+} satisfies Record<string, CSSProperties | ((...args: any[]) => CSSProperties)>;

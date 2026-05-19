@@ -23,7 +23,7 @@ Real-time shift task management for household support workers. Families add task
 
 - **Backend:** Express + TypeScript + Prisma + Socket.io
 - **Frontend:** React + Vite + TypeScript
-- **Database:** PostgreSQL (Prisma ORM)
+- **Database:** SQLite in the current repo config (Prisma ORM)
 - **Calendar:** Google Calendar API
 - **Real-time:** Socket.io for live updates
 
@@ -52,6 +52,7 @@ Deployed on Ubuntu server behind nginx reverse proxy at `/shiftly` subpath (coex
 
 ## Active Issues
 
-- [#38](https://github.com/pjrobinson85-create/shiftly/issues/38) — Tasks page renders blank after subpath routing setup (in progress)
+- [#38](https://github.com/pjrobinson85-create/shiftly/issues/38) — Tasks page renders blank after subpath routing setup (open)
+- Stabilization work is being tracked in [`docs/plans/2026-05-20-stabilization-plan.md`](docs/plans/2026-05-20-stabilization-plan.md)
 
 Full setup guide → [CONTRIBUTING.md](CONTRIBUTING.md)
