@@ -137,5 +137,4 @@ To serve at `/shiftly` instead of `/`, the following changes were made:
 2. **client/src/api/client.ts**: axios `baseURL: '/shiftly/api'`
 3. **client/src/main.tsx**: `<BrowserRouter basename="/shiftly">`
 4. **TasksPage.tsx**: socket.io connection uses `window.location.origin` with custom path `/shiftly/socket.io`
-
-**Known issue:** [#38](https://github.com/pjrobinson85-create/shiftly/issues/38) — blank page when accessing through nginx (likely HMR/CORS issue)
+5. Dashboard/sidebar links stay under the `/shiftly/...` router basename so in-app navigation does not escape the subpath
