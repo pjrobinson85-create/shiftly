@@ -33,10 +33,12 @@ model User {
 
   tasksCreated       TaskInstance[]    @relation("TaskCreator")
   tasksCompleted     TaskInstance[]    @relation("TaskCompleter")
-  shiftNotes         ShiftNote[]
-  shoppingListItems  ShoppingListItem[]
-  incidents          Incident[]
-  refreshTokens      RefreshToken[]
+  shiftNotes           ShiftNote[]
+  shiftSessionsStarted ShiftSession[] @relation("ShiftSessionStarter")
+  shiftSessionsEnded   ShiftSession[] @relation("ShiftSessionEnder")
+  shoppingListItems    ShoppingListItem[]
+  incidents            Incident[]
+  refreshTokens        RefreshToken[]
 }
 
 // JWT refresh tokens — short-lived access tokens (15min) + long-lived refresh tokens (7d, httpOnly cookie)
@@ -91,6 +93,21 @@ model TaskInstance {
 }
 
 // Shift notes (handover between shifts)
+model ShiftSession {
+  id             String   @id @default(uuid())
+  shiftDate      DateTime @unique
+  checkedInAt    DateTime?
+  checkedOutAt   DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  checkedInById  String?
+  checkedInBy    User?    @relation("ShiftSessionStarter", fields: [checkedInById], references: [id])
+
+  checkedOutById String?
+  checkedOutBy   User?    @relation("ShiftSessionEnder", fields: [checkedOutById], references: [id])
+}
+
 model ShiftNote {
   id          String   @id @default(uuid())
   content     String

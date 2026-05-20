@@ -53,16 +53,24 @@ Deployed on Ubuntu server behind nginx reverse proxy at `/shiftly` subpath (coex
 ## Active Issues
 
 - [#40](https://github.com/pjrobinson85-create/shiftly/issues/40) — Security: harden Google Calendar OAuth callback and token handling (live Google credential setup/manual verification deferred until later)
-- [#41](https://github.com/pjrobinson85-create/shiftly/issues/41) — CI: add build/typecheck checks for client and server
+- [#7](https://github.com/pjrobinson85-create/shiftly/issues/7) — Shift check-in/out + shift handover notes
 - Stabilization work is being tracked in [`docs/plans/2026-05-20-stabilization-plan.md`](docs/plans/2026-05-20-stabilization-plan.md)
 
 ## Local Verification
 
-Run the same checks expected in CI:
+Run the same checks expected in CI plus the shift-session regression test:
 
 ```bash
-cd server && npm ci && npm run db:generate && npm run typecheck && npm run build
+cd server && npm ci && npm run db:generate && npx tsx --test src/lib/shift-session.test.ts && npm run typecheck && npm run build
 cd ../client && npm ci && npm run typecheck && npm run build
 ```
+
+### Shift handover manual verification
+
+- Log in as `worker@shiftly.test` / `password123`
+- Open the dashboard and confirm **Check In** is available before the shift starts
+- Check in, confirm status changes to **In Progress**, then use **Check Out**
+- Enter a required handover note and optional photo paths/links on checkout
+- Log in as `family@shiftly.test` / `password123` and confirm the latest worker handover note and shift status are visible
 
 Full setup guide → [CONTRIBUTING.md](CONTRIBUTING.md)
