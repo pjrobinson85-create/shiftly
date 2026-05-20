@@ -35,8 +35,9 @@ model User {
   tasksCompleted     TaskInstance[]    @relation("TaskCompleter")
   shiftNotes         ShiftNote[]
   shoppingListItems  ShoppingListItem[]
-  incidents          Incident[]
-  refreshTokens      RefreshToken[]
+  incidents           Incident[]
+  refreshTokens       RefreshToken[]
+  calendarConnections CalendarConnection[]
 }
 
 // JWT refresh tokens — short-lived access tokens (15min) + long-lived refresh tokens (7d, httpOnly cookie)
@@ -143,6 +144,16 @@ model CalendarEvent {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model CalendarConnection {
+  id                    String   @id @default(uuid())
+  provider              String   @unique
+  refreshTokenEncrypted String
+  connectedByUserId     String?
+  connectedByUser       User?    @relation(fields: [connectedByUserId], references: [id], onDelete: SetNull)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 // Incident reports

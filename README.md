@@ -52,7 +52,8 @@ Deployed on Ubuntu server behind nginx reverse proxy at `/shiftly` subpath (coex
 
 ## Active Issues
 
-- [#38](https://github.com/pjrobinson85-create/shiftly/issues/38) — Tasks page renders blank after subpath routing setup (open)
+- [#40](https://github.com/pjrobinson85-create/shiftly/issues/40) — Security: harden Google Calendar OAuth callback and token handling
+- [#41](https://github.com/pjrobinson85-create/shiftly/issues/41) — CI: add build/typecheck checks for client and server
 - Stabilization work is being tracked in [`docs/plans/2026-05-20-stabilization-plan.md`](docs/plans/2026-05-20-stabilization-plan.md)
 
 ## Local Verification
@@ -60,8 +61,17 @@ Deployed on Ubuntu server behind nginx reverse proxy at `/shiftly` subpath (coex
 Run the same checks expected in CI:
 
 ```bash
-cd server && npm ci && npm run typecheck && npm run build
+cd server && npm ci && npm run db:generate && npm run typecheck && npm run build
+cd server && npx tsx --test src/lib/calendar-oauth.test.ts
 cd ../client && npm ci && npm run typecheck && npm run build
 ```
+
+### Google Calendar manual verification
+
+- Log in as `family@shiftly.test` / `password123`
+- Open `/shiftly/calendar`
+- Use **Connect Google Calendar** to start OAuth once server credentials are configured
+- After returning to the app, use **Sync Google Calendar** and confirm events load
+- If Google credentials are revoked/expired, confirm Shiftly asks for a reconnect instead of exposing token details
 
 Full setup guide → [CONTRIBUTING.md](CONTRIBUTING.md)

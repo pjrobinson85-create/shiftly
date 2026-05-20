@@ -79,6 +79,7 @@ Before pushing, run the same checks expected in CI:
 cd server
 npm ci
 npm run db:generate
+npx tsx --test src/lib/calendar-oauth.test.ts
 npm run typecheck
 npm run build
 
@@ -87,6 +88,22 @@ npm ci
 npm run typecheck
 npm run build
 ```
+
+### Google Calendar OAuth security notes
+
+- `GET /api/calendar/auth-url` now signs a short-lived OAuth `state` value tied to the authenticated family user and a safe in-app redirect path.
+- `GET /api/calendar/callback` validates that `state` before exchanging the Google authorization code.
+- Google refresh tokens are stored encrypted in the database (`CalendarConnection.refreshTokenEncrypted`) instead of being logged or returned in API responses.
+- If Google returns `invalid_grant` / revoked credentials during sync, Shiftly clears the stored calendar connection and asks the user to reconnect.
+
+### Manual verification for Google Calendar hardening
+
+1. Log in as a FAMILY user.
+2. Open **Calendar** and click **Connect Google Calendar**.
+3. Complete the Google consent flow and confirm you land back on `/shiftly/calendar` with a success banner.
+4. Click **Sync Google Calendar** and confirm events appear.
+5. Revoke the Google app or replace the stored token with an invalid one, then retry sync and confirm Shiftly fails safely with a reconnect message.
+6. Confirm server logs and API responses never print or return the raw Google refresh token.
 
 ## Deployment
 
@@ -124,6 +141,14 @@ Two systemd services manage the deployment:
 - **shiftly-client.service** — Vite dev server on port 5173
 
 ```bash
+cd /home/paul/projects/shiftly
+git pull
+
+cd server
+npm run db:generate
+npx prisma db push
+cd ..
+
 sudo systemctl restart shiftly-client.service
 sudo systemctl restart shiftly-server.service
 sudo journalctl -u shiftly-client.service -f  # watch logs
@@ -137,5 +162,4 @@ To serve at `/shiftly` instead of `/`, the following changes were made:
 2. **client/src/api/client.ts**: axios `baseURL: '/shiftly/api'`
 3. **client/src/main.tsx**: `<BrowserRouter basename="/shiftly">`
 4. **TasksPage.tsx**: socket.io connection uses `window.location.origin` with custom path `/shiftly/socket.io`
-
-**Known issue:** [#38](https://github.com/pjrobinson85-create/shiftly/issues/38) — blank page when accessing through nginx (likely HMR/CORS issue)
+5. Dashboard/sidebar links now use router links so navigation stays under `/shiftly/...`

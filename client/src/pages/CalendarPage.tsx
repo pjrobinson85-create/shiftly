@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/client';
+import { useAuth } from '../context/AuthContext';
 
 interface CalendarEvent {
   id: string;
@@ -42,6 +43,7 @@ function groupByDate(events: CalendarEvent[]): Record<string, CalendarEvent[]> {
 }
 
 export default function CalendarPage() {
+  const { user } = useAuth();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [backendAvailable, setBackendAvailable] = useState(true);
@@ -60,6 +62,21 @@ export default function CalendarPage() {
   });
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const calendarStatus = params.get('calendarStatus');
+    const calendarMessage = params.get('calendarMessage');
+    const eventsSynced = params.get('eventsSynced');
+
+    if (calendarStatus === 'connected') {
+      setSuccess(eventsSynced ? `Google Calendar connected. ${eventsSynced} event(s) synced.` : 'Google Calendar connected successfully!');
+      setError('');
+      window.history.replaceState({}, '', `${window.location.pathname}`);
+    } else if (calendarStatus === 'error') {
+      setError(calendarMessage || 'Google Calendar connection failed.');
+      setSuccess('');
+      window.history.replaceState({}, '', `${window.location.pathname}`);
+    }
+
     fetchEvents();
   }, []);
 
@@ -79,6 +96,23 @@ export default function CalendarPage() {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function connectGoogleCalendar() {
+    setSyncing(true);
+    setError('');
+    setSuccess('');
+    try {
+      const redirect = `${window.location.pathname}`;
+      const { data } = await api.get('/calendar/auth-url', { params: { redirect } });
+      window.location.assign((data as { authUrl: string }).authUrl);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.error ||
+        'Google Calendar connection is not available until OAuth credentials are configured on the server.'
+      );
+      setSyncing(false);
     }
   }
 
@@ -129,18 +163,29 @@ export default function CalendarPage() {
           <h2 style={styles.pageTitle}>Calendar</h2>
           <p style={styles.subtitle}>Shift schedule and appointments</p>
         </div>
-        <button
-          style={{ ...styles.btn, ...(syncing ? styles.btnDisabled : {}) }}
-          onClick={syncCalendar}
-          disabled={syncing}
-        >
-          {syncing ? 'Syncing…' : '⟳ Sync Google Calendar'}
-        </button>
+        <div style={styles.actionsRow}>
+          {user?.role === 'FAMILY' && (
+            <button
+              style={{ ...styles.secondaryBtn, ...(syncing ? styles.btnDisabled : {}) }}
+              onClick={connectGoogleCalendar}
+              disabled={syncing}
+            >
+              {syncing ? 'Connecting…' : '🔗 Connect Google Calendar'}
+            </button>
+          )}
+          <button
+            style={{ ...styles.btn, ...(syncing ? styles.btnDisabled : {}) }}
+            onClick={syncCalendar}
+            disabled={syncing}
+          >
+            {syncing ? 'Syncing…' : '⟳ Sync Google Calendar'}
+          </button>
+        </div>
       </div>
 
       {!backendAvailable && (
         <div style={styles.infoBanner}>
-          ℹ️ Google Calendar sync requires server configuration. Add your Google OAuth credentials to the server .env to enable this feature.
+          ℹ️ Google Calendar sync requires server OAuth credentials. Once they are configured, connect your account here and Shiftly will store the refresh token encrypted at rest.
         </div>
       )}
 
@@ -225,7 +270,7 @@ export default function CalendarPage() {
           <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📅</div>
           <div>No calendar events yet</div>
           <div style={styles.emptyHint}>
-            Click "Sync Google Calendar" after connecting your Google account in the server settings.
+            Connect Google Calendar, then click sync to pull upcoming appointments into Shiftly.
           </div>
         </div>
       )}
@@ -263,6 +308,12 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
     gap: '0.75rem',
   },
+  actionsRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    alignItems: 'center',
+  },
   pageTitle: {
     fontSize: '1.3rem',
     fontWeight: 700,
@@ -278,9 +329,17 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#2563eb',
     color: '#fff',
     border: 'none',
-    borderRadius: '8px',
-    padding: '0.55rem 1rem',
-    fontSize: '0.9rem',
+    borderRadius: '10px',
+    padding: '0.7rem 1rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  secondaryBtn: {
+    background: '#e0e7ff',
+    color: '#1d4ed8',
+    border: '1px solid #bfdbfe',
+    borderRadius: '10px',
+    padding: '0.7rem 1rem',
     fontWeight: 600,
     cursor: 'pointer',
   },
