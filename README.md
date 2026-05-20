@@ -53,23 +53,24 @@ Deployed on Ubuntu server behind nginx reverse proxy at `/shiftly` subpath (coex
 ## Active Issues
 
 - [#40](https://github.com/pjrobinson85-create/shiftly/issues/40) — Security: harden Google Calendar OAuth callback and token handling (live Google credential setup/manual verification deferred until later)
-- [#8](https://github.com/pjrobinson85-create/shiftly/issues/8) — Care profile/reference page with family-only editing and worker-safe read access
+- [#9](https://github.com/pjrobinson85-create/shiftly/issues/9) — Incident logging with severity, photo links/paths, and family real-time notifications
 - Stabilization work is being tracked in [`docs/plans/2026-05-20-stabilization-plan.md`](docs/plans/2026-05-20-stabilization-plan.md)
 
 ## Local Verification
 
-Run the same checks expected in CI plus the shift-session and care-profile regression tests:
+Run the same checks expected in CI plus the shift-session, care-profile, and incident regression tests:
 
 ```bash
-cd server && npm ci && npm run db:generate && npx tsx --test src/lib/shift-session.test.ts && npx tsx --test src/lib/care-profile.test.ts && npm run typecheck && npm run build
+cd server && npm ci && npm run db:generate && npx tsx --test src/lib/shift-session.test.ts && npx tsx --test src/lib/care-profile.test.ts && npx tsx --test src/lib/incidents.test.ts && npm run typecheck && npm run build
 cd ../client && npm ci && npm run typecheck && npm run build
 ```
 
-### Care profile manual verification
+### Incident logging manual verification
 
-- Log in as `family@shiftly.test` / `password123`
-- Open **Care Profile**, create or edit the profile, and save medical info, preferences, equipment settings, emergency contacts, and optional internal notes
 - Log in as `worker@shiftly.test` / `password123`
-- Confirm the care profile is readable but internal family-only notes are hidden from workers
+- Open **Incidents**, submit a report with title, description, severity, and optional photo links/paths
+- Confirm the occurred-at timestamp defaults to the current time but can be adjusted before submit
+- Log in as `family@shiftly.test` / `password123`
+- Confirm the incident appears in the feed and family listeners receive the real-time update
 
 Full setup guide → [CONTRIBUTING.md](CONTRIBUTING.md)
