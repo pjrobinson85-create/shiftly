@@ -1,5 +1,7 @@
 # Shiftly — Frontend Implementation Plan
 
+> Historical planning document from the initial build-out. Current stabilization work is tracked in `docs/plans/2026-05-20-stabilization-plan.md`.
+
 ## What Exists (Backend)
 
 ### API Endpoints (base: `/api`)
