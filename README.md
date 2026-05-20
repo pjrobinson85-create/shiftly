@@ -55,4 +55,13 @@ Deployed on Ubuntu server behind nginx reverse proxy at `/shiftly` subpath (coex
 - [#38](https://github.com/pjrobinson85-create/shiftly/issues/38) — Tasks page renders blank after subpath routing setup (open)
 - Stabilization work is being tracked in [`docs/plans/2026-05-20-stabilization-plan.md`](docs/plans/2026-05-20-stabilization-plan.md)
 
+## Local Verification
+
+Run the same checks expected in CI:
+
+```bash
+cd server && npm ci && npm run typecheck && npm run build
+cd ../client && npm ci && npm run typecheck && npm run build
+```
+
 Full setup guide → [CONTRIBUTING.md](CONTRIBUTING.md)
