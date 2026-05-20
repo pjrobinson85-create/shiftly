@@ -35,6 +35,7 @@ export default function Dashboard() {
           <SidebarLink to="/" label="Dashboard" dark={dark} />
           <SidebarLink to="/tasks" label="Tasks" dark={dark} />
           <SidebarLink to="/shopping" label="Shopping List" dark={dark} />
+          <SidebarLink to="/care-profile" label="Care Profile" dark={dark} />
           {user?.role === 'FAMILY' && (
             <>
               <SidebarLink to="/recurring" label="Recurring Tasks" dark={dark} />

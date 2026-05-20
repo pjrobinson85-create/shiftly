@@ -38,6 +38,7 @@ model User {
   shiftSessionsEnded   ShiftSession[] @relation("ShiftSessionEnder")
   shoppingListItems    ShoppingListItem[]
   incidents            Incident[]
+  careProfilesUpdated  CareProfile[]  @relation("CareProfileUpdater")
   refreshTokens        RefreshToken[]
 }
 
@@ -117,6 +118,21 @@ model ShiftNote {
 
   userId      String
   user        User     @relation(fields: [userId], references: [id])
+}
+
+model CareProfile {
+  id                String   @id @default(uuid())
+  medicalInfo       String
+  preferences       String
+  equipmentSettings String
+  emergencyContacts String
+  medicationSchedule String?
+  internalNotes     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  updatedById       String?
+  updatedBy         User?    @relation("CareProfileUpdater", fields: [updatedById], references: [id])
 }
 
 // Shopping list

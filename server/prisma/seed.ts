@@ -33,6 +33,29 @@ async function main() {
     },
   });
 
+  await prisma.careProfile.upsert({
+    where: { id: 'default-care-profile' },
+    update: {
+      medicalInfo: 'Penicillin allergy. Monitor hydration during hot weather and note any seizure activity immediately.',
+      preferences: 'Prefers calm verbal prompts, tea with one sugar, and advance notice before transfers or schedule changes.',
+      equipmentSettings: 'Powerchair speed capped at indoor profile 2. Tilt at 12 degrees for meals and charger stored in hallway basket.',
+      emergencyContacts: 'Paul — +61 400 000 000\nBackup contact: Sarah (worker coordinator) — +61 400 000 001\nEmergency services: 000',
+      medicationSchedule: 'Morning meds at 08:00 with breakfast. Evening meds at 20:00 after dinner.',
+      internalNotes: 'Family-only: respite agency prefers text updates before any roster swaps. Keep spare house key in the blue lockbox.',
+      updatedById: family.id,
+    },
+    create: {
+      id: 'default-care-profile',
+      medicalInfo: 'Penicillin allergy. Monitor hydration during hot weather and note any seizure activity immediately.',
+      preferences: 'Prefers calm verbal prompts, tea with one sugar, and advance notice before transfers or schedule changes.',
+      equipmentSettings: 'Powerchair speed capped at indoor profile 2. Tilt at 12 degrees for meals and charger stored in hallway basket.',
+      emergencyContacts: 'Paul — +61 400 000 000\nBackup contact: Sarah (worker coordinator) — +61 400 000 001\nEmergency services: 000',
+      medicationSchedule: 'Morning meds at 08:00 with breakfast. Evening meds at 20:00 after dinner.',
+      internalNotes: 'Family-only: respite agency prefers text updates before any roster swaps. Keep spare house key in the blue lockbox.',
+      updatedById: family.id,
+    },
+  });
+
   // Create recurring tasks
   const morningRoutine = await prisma.recurringTask.upsert({
     where: { id: 'morning-routine' },
