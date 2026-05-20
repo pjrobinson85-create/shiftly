@@ -53,24 +53,23 @@ Deployed on Ubuntu server behind nginx reverse proxy at `/shiftly` subpath (coex
 ## Active Issues
 
 - [#40](https://github.com/pjrobinson85-create/shiftly/issues/40) — Security: harden Google Calendar OAuth callback and token handling (live Google credential setup/manual verification deferred until later)
-- [#7](https://github.com/pjrobinson85-create/shiftly/issues/7) — Shift check-in/out + shift handover notes
+- [#8](https://github.com/pjrobinson85-create/shiftly/issues/8) — Care profile/reference page with family-only editing and worker-safe read access
 - Stabilization work is being tracked in [`docs/plans/2026-05-20-stabilization-plan.md`](docs/plans/2026-05-20-stabilization-plan.md)
 
 ## Local Verification
 
-Run the same checks expected in CI plus the shift-session regression test:
+Run the same checks expected in CI plus the shift-session and care-profile regression tests:
 
 ```bash
-cd server && npm ci && npm run db:generate && npx tsx --test src/lib/shift-session.test.ts && npm run typecheck && npm run build
+cd server && npm ci && npm run db:generate && npx tsx --test src/lib/shift-session.test.ts && npx tsx --test src/lib/care-profile.test.ts && npm run typecheck && npm run build
 cd ../client && npm ci && npm run typecheck && npm run build
 ```
 
-### Shift handover manual verification
+### Care profile manual verification
 
+- Log in as `family@shiftly.test` / `password123`
+- Open **Care Profile**, create or edit the profile, and save medical info, preferences, equipment settings, emergency contacts, and optional internal notes
 - Log in as `worker@shiftly.test` / `password123`
-- Open the dashboard and confirm **Check In** is available before the shift starts
-- Check in, confirm status changes to **In Progress**, then use **Check Out**
-- Enter a required handover note and optional photo paths/links on checkout
-- Log in as `family@shiftly.test` / `password123` and confirm the latest worker handover note and shift status are visible
+- Confirm the care profile is readable but internal family-only notes are hidden from workers
 
 Full setup guide → [CONTRIBUTING.md](CONTRIBUTING.md)

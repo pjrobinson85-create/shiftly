@@ -14,6 +14,7 @@ import taskRoutes from './routes/tasks';
 import shiftRoutes from './routes/shifts';
 import incidentRoutes from './routes/incidents';
 import calendarRoutes from './routes/calendar';
+import careProfileRoutes from './routes/care-profile';
 
 const app = express();
 const httpServer = createServer(app);
@@ -44,6 +45,7 @@ app.use('/api/shifts', shiftRoutes);
 app.use('/api/shopping', shoppingRouter);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/care-profile', careProfileRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

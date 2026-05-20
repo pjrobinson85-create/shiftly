@@ -80,6 +80,7 @@ cd server
 npm ci
 npm run db:generate
 npx tsx --test src/lib/shift-session.test.ts
+npx tsx --test src/lib/care-profile.test.ts
 npm run typecheck
 npm run build
 
@@ -89,14 +90,13 @@ npm run typecheck
 npm run build
 ```
 
-### Manual verification for shift check-in / check-out handover
+### Manual verification for care profile access and editing
 
-1. Log in as `worker@shiftly.test`.
-2. Open the dashboard and confirm the shift status begins at **Not started**.
-3. Click **Check In** and confirm the status changes to **In progress** with the worker/time recorded.
-4. Click **Check Out** and verify a blank submission is blocked until a handover note is entered.
-5. Submit the checkout form with a handover note and optional photo links/paths.
-6. Log in as `family@shiftly.test` or another worker and confirm the latest worker handover note and completed shift status are visible.
+1. Log in as `family@shiftly.test`.
+2. Open **Care Profile** and confirm the family user can create or edit the profile.
+3. Save medical info, preferences, equipment settings, emergency contacts, and optional internal notes.
+4. Log in as `worker@shiftly.test` and confirm the care profile is readable.
+5. Verify internal family-only notes are hidden from workers while the shared sections remain visible.
 
 ## Deployment
 
