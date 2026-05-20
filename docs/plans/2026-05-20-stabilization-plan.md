@@ -34,4 +34,9 @@
 
 ## GitHub tracking note
 
-The currently configured GitHub token can read issues but returns `403 Resource not accessible by personal access token` for issue creation/editing. I’m proceeding with local branch work and in-repo documentation so the implementation remains tracked while GitHub write access is sorted out.
+GitHub write access is now working again. Tracking is in GitHub as:
+- Issue #39 — build-health stabilization pass
+- Issue #40 — Google Calendar OAuth hardening follow-up
+- Issue #41 — CI build/typecheck follow-up
+- Issue #38 — subpath routing regression follow-up
+- PR #42 — `fix/stabilization-build-health`
