@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { AuthRequest, requireAuth } from '../middleware/auth';
 import prisma from '../lib/prisma';
+import { validateIncidentPayload } from '../lib/incidents';
 
 const router = Router();
 
@@ -47,36 +48,25 @@ router.get('/:id', async (req: AuthRequest, res) => {
 // POST /api/incidents — create an incident report
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const body = req.body as {
-      title: string;
-      description: string;
-      severity: 'low' | 'medium' | 'high';
-      occurredAt?: string;
-      photos?: string[];
-    };
-
-    if (!body.title || !body.description || !body.severity) {
-      return res.status(400).json({ error: 'Title, description, and severity are required' });
-    }
-
-    if (!['low', 'medium', 'high'].includes(body.severity)) {
-      return res.status(400).json({ error: 'severity must be low, medium, or high' });
+    const validation = validateIncidentPayload(req.body as Record<string, unknown>);
+    if (!validation.ok) {
+      return res.status(400).json({ error: validation.error });
     }
 
     const incident = await prisma.incident.create({
       data: {
-        title: body.title,
-        description: body.description,
-        severity: body.severity,
-        occurredAt: body.occurredAt ? new Date(body.occurredAt) : new Date(),
-        photos: body.photos ?? [],
+        title: validation.data.title,
+        description: validation.data.description,
+        severity: validation.data.severity,
+        occurredAt: validation.data.occurredAt,
+        photos: validation.data.photos,
         userId: req.user!.id,
       },
-      include: { user: { select: { id: true, name: true } } },
+      include: { user: { select: { id: true, name: true, role: true } } },
     });
 
     const { io } = await import('../index');
-    io.emit('incident:created', incident);
+    io.to('FAMILY').emit('incident:created', incident);
 
     res.status(201).json(incident);
   } catch (error) {
