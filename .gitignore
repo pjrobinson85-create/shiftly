@@ -23,3 +23,5 @@ Thumbs.db
 
 # Debug
 npm-debug.log*
+.google-oauth.json
+uploads/

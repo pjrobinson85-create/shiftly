@@ -33,10 +33,12 @@ model User {
 
   tasksCreated       TaskInstance[]    @relation("TaskCreator")
   tasksCompleted     TaskInstance[]    @relation("TaskCompleter")
+  assignedTasks      TaskInstance[]    @relation("AssignedTasks")
   shiftNotes         ShiftNote[]
   shoppingListItems  ShoppingListItem[]
   incidents          Incident[]
   refreshTokens      RefreshToken[]
+  auditLogs          AuditLog[]
 }
 
 // JWT refresh tokens — short-lived access tokens (15min) + long-lived refresh tokens (7d, httpOnly cookie)
@@ -85,6 +87,9 @@ model TaskInstance {
 
   completedById String?
   completedBy   User?      @relation("TaskCompleter", fields: [completedById], references: [id])
+
+  assignedToId  String?
+  assignedTo    User?      @relation("AssignedTasks", fields: [assignedToId], references: [id])
 
   recurringTaskId String?
   recurringTask   RecurringTask? @relation(fields: [recurringTaskId], references: [id])
@@ -158,4 +163,22 @@ model Incident {
 
   userId      String
   user        User     @relation(fields: [userId], references: [id])
+}
+
+// Audit log — who did what, when (task completions, assignments, incident reports, etc.)
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String   // e.g., "task.completed", "task.created", "incident.reported", "task.assigned"
+  entity    String   // e.g., "task", "incident", "shift_note", "shopping_item"
+  entityId  String?  // id of the affected record
+  detail    String?  // short human-readable summary
+  ip        String?
+
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([userId, createdAt])
 }
