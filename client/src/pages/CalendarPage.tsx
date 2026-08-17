@@ -299,7 +299,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   error: {
     background: 'var(--danger-soft)',
-    color: 'var(--danger)',
+    color: 'var(--danger-text)',
     padding: '0.75rem 1rem',
     borderRadius: '8px',
     fontSize: '0.9rem',
@@ -348,7 +348,7 @@ const styles: Record<string, React.CSSProperties> = {
   todayLink: {
     background: 'none',
     border: 'none',
-    color: 'var(--brand)',
+    color: 'var(--brand-text)',
     cursor: 'pointer',
     fontSize: '0.8rem',
     padding: '2px 0',
@@ -393,7 +393,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--text)',
   },
   dayNumToday: {
-    color: 'var(--brand)',
+    color: 'var(--brand-text)',
   },
   dayEvents: {
     padding: '0.4rem',
@@ -484,7 +484,7 @@ const styles: Record<string, React.CSSProperties> = {
   upcomingTime: {
     fontSize: '0.8rem',
     fontWeight: 600,
-    color: 'var(--brand)',
+    color: 'var(--brand-text)',
     marginBottom: '0.2rem',
   },
   upcomingTitle: {

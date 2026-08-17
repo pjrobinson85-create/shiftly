@@ -21,22 +21,25 @@
   --text: #111827;
   --text-2: #374151;
   --muted: #6b7280;
-  --faint: #9ca3af;
+  --faint: #64748b;
 
   /* brand */
   --brand: #2563eb;
   --brand-strong: #1d4ed8;
+  --brand-text: #2563eb;
   --brand-soft: #eff6ff;
   --brand-border: #bfdbfe;
 
   /* semantic */
   --success: #16a34a;
   --success-strong: #047857;
+  --success-surface: #15803d;
   --success-soft: #ecfdf5;
-  --danger: #dc2626;
+  --danger: #b91c1c;
   --danger-strong: #b91c1c;
+  --danger-text: #b91c1c;
   --danger-soft: #fef2f2;
-  --warning: #d97706;
+  --warning: #b45309;
   --warning-2: #f59e0b;
   --warning-soft: #fffbeb;
   --info: #0369a1;
@@ -74,18 +77,21 @@
   --text: #f1f5f9;
   --text-2: #cbd5e1;
   --muted: #94a3b8;
-  --faint: #64748b;
+  --faint: #7c8da6;
 
-  --brand: #3b82f6;
+  --brand: #2563eb;
   --brand-strong: #60a5fa;
+  --brand-text: #60a5fa;
   --brand-soft: rgba(59, 130, 246, 0.14);
   --brand-border: #1e3a5f;
 
   --success: #22c55e;
   --success-strong: #4ade80;
+  --success-surface: #166534;
   --success-soft: rgba(34, 197, 94, 0.12);
-  --danger: #ef4444;
+  --danger: #b91c1c;
   --danger-strong: #f87171;
+  --danger-text: #f87171;
   --danger-soft: rgba(239, 68, 68, 0.12);
   --danger-border: rgba(239, 68, 68, 0.4);
 
@@ -139,6 +145,7 @@ textarea:focus {
 
 button {
   cursor: pointer;
+  color: inherit;
 }
 
 button:disabled {
@@ -157,7 +164,7 @@ a {
 }
 
 a:hover {
-  color: var(--brand);
+  color: var(--brand-text);
 }
 
 ::selection {

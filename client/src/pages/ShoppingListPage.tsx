@@ -374,7 +374,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   error: {
     background: 'var(--danger-soft)',
-    color: 'var(--danger)',
+    color: 'var(--danger-text)',
     padding: '0.75rem 1rem',
     borderRadius: '8px',
     fontSize: '0.9rem',
@@ -492,8 +492,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
   },
   checkboxDone: {
-    background: 'var(--success)',
-    borderColor: 'var(--success)',
+    background: 'var(--success-surface)',
+    borderColor: 'var(--success-surface)',
   },
   itemName: {
     flex: 1,

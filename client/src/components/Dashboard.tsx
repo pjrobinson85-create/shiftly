@@ -124,7 +124,7 @@ function DashboardHome() {
           <div style={styles.statLabel}>Completed</div>
         </div>
         <div style={styles.statCard(dark)}>
-          <div style={{ ...styles.statValue, color: 'var(--brand)' }}>{progressPct}%</div>
+          <div style={{ ...styles.statValue, color: 'var(--brand-text)' }}>{progressPct}%</div>
           <div style={styles.statLabel}>Progress</div>
         </div>
       </div>
@@ -156,7 +156,7 @@ function TodayTaskCard({ task, dark }: { task: TaskInstance; dark: boolean }) {
     }}>
       <div style={{
         ...styles.taskCheckCircle,
-        background: task.completed ? 'var(--success)' : (isUrgent ? 'var(--danger)' : 'var(--brand)'),
+        background: task.completed ? 'var(--success-surface)' : (isUrgent ? 'var(--danger)' : 'var(--brand)'),
       }}>
         {task.completed ? '✓' : ''}
       </div>
@@ -180,7 +180,7 @@ const styles = {
   layout: (dark) => ({
     display: 'flex',
     minHeight: '100vh',
-    background: 'var(--text)',
+    background: 'var(--bg)',
   }),
   sidebar: (dark) => ({
     width: '220px',
@@ -214,7 +214,7 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    background: 'var(--text)',
+    background: 'var(--bg)',
   }),
   header: (dark) => ({
     display: 'flex',

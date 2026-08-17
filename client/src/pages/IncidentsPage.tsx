@@ -160,7 +160,7 @@ export default function IncidentsPage() {
           <div style={styles.statLabel}>Total logged</div>
         </div>
         <div style={styles.statCard(dark)}>
-          <div style={{ ...styles.statValue(dark), color: 'var(--danger)' }}>{counts.high}</div>
+          <div style={{ ...styles.statValue(dark), color: 'var(--danger-text)' }}>{counts.high}</div>
           <div style={styles.statLabel}>High severity</div>
         </div>
         <div style={styles.statCard(dark)}>
@@ -441,7 +441,7 @@ const styles: Record<string, any> = {
     border: '1px solid var(--border)',
     borderRadius: '14px',
     padding: '1rem',
-    background: 'var(--text)',
+    background: 'var(--surface)',
   }),
   incidentHeader: {
     display: 'flex',

@@ -328,7 +328,7 @@ export default function ShiftSummary() {
                   </div>
                   <div style={styles.countDivider} />
                   <div style={styles.countItem}>
-                    <span style={{ ...styles.countNum, color: 'var(--warning-2)' }}>{shift.tasks.pending}</span>
+                    <span style={{ ...styles.countNum, color: 'var(--warning)' }}>{shift.tasks.pending}</span>
                     <span style={styles.countLabel}>Pending</span>
                   </div>
                   <div style={styles.countDivider} />
@@ -545,7 +545,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   viewAll: {
     fontSize: '0.8rem',
-    color: 'var(--brand)',
+    color: 'var(--brand-text)',
     textDecoration: 'none',
     fontWeight: 500,
   },
@@ -641,7 +641,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   progressFill: {
     height: '100%',
-    background: 'var(--success)',
+    background: 'var(--success-surface)',
     borderRadius: '99px',
     transition: 'width 0.4s ease',
   },
@@ -697,7 +697,7 @@ const styles: Record<string, React.CSSProperties> = {
   urgentAlertTitle: {
     fontWeight: 600,
     fontSize: '0.85rem',
-    color: 'var(--danger)',
+    color: 'var(--danger-text)',
   },
   urgentTaskItem: {
     fontSize: '0.8rem',
@@ -713,7 +713,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.85rem',
   },
   link: {
-    color: 'var(--brand)',
+    color: 'var(--brand-text)',
     textDecoration: 'none',
   },
   eventList: {
@@ -729,7 +729,7 @@ const styles: Record<string, React.CSSProperties> = {
   eventTime: {
     fontSize: '0.8rem',
     fontWeight: 600,
-    color: 'var(--brand)',
+    color: 'var(--brand-text)',
     minWidth: '52px',
     paddingTop: '2px',
   },
@@ -762,7 +762,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'inherit',
   },
   noteError: {
-    color: 'var(--danger)',
+    color: 'var(--danger-text)',
     fontSize: '0.85rem',
   },
   noteList: {

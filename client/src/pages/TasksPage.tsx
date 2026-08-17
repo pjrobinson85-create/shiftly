@@ -254,7 +254,7 @@ export default function TasksPage() {
               />
               &nbsp;Normal
             </label>
-            <label style={{ ...styles.priorityLabel(), color: 'var(--danger)' }}>
+            <label style={{ ...styles.priorityLabel(), color: 'var(--danger-text)' }}>
               <input
                 type="radio"
                 name="priority"
@@ -429,7 +429,7 @@ const styles = {
   todayBtn: () => ({
     background: 'none',
     border: 'none',
-    color: 'var(--brand)',
+    color: 'var(--brand-text)',
     cursor: 'pointer',
     fontSize: '0.8rem',
     padding: '2px 0',
@@ -525,7 +525,7 @@ const styles = {
   }),
   error: () => ({
     background: 'var(--danger-soft)',
-    color: 'var(--danger)',
+    color: 'var(--danger-text)',
     padding: '0.75rem 1rem',
     borderRadius: '8px',
     marginBottom: '1rem',
@@ -650,7 +650,7 @@ const styles = {
   deleteBtn: (dark) => ({
     background: 'none',
     border: 'none',
-    color: 'var(--danger)',
+    color: 'var(--danger-text)',
     cursor: 'pointer',
     fontSize: '1rem',
     padding: '0.25rem',

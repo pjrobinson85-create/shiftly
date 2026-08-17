@@ -40,7 +40,10 @@ const authLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => isTest,
+  // Only guard the credential endpoints (login/register/refresh). The session
+  // check (GET /me) runs on every navigation and must never be throttled —
+  // 429-ing it makes the client drop the token and log the user out.
+  skip: (req) => isTest || req.method !== 'POST',
   message: { error: 'Too many attempts, please try again later' },
 });
 app.use('/api/auth', authLimiter);

@@ -201,7 +201,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   error: {
     background: 'var(--danger-soft)',
-    color: 'var(--danger)',
+    color: 'var(--danger-text)',
     padding: '0.6rem 0.8rem',
     borderRadius: '8px',
     fontSize: '0.9rem',

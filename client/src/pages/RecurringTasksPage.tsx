@@ -256,7 +256,7 @@ export default function RecurringTasksPage() {
                   />
                   &nbsp;Normal
                 </label>
-                <label style={{ ...styles.radioLabel, color: 'var(--danger)' }}>
+                <label style={{ ...styles.radioLabel, color: 'var(--danger-text)' }}>
                   <input
                     type="radio"
                     name="priority"
@@ -368,7 +368,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   error: {
     background: 'var(--danger-soft)',
-    color: 'var(--danger)',
+    color: 'var(--danger-text)',
     padding: '0.75rem 1rem',
     borderRadius: '8px',
     fontSize: '0.9rem',
@@ -498,7 +498,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   urgentBadge: {
     background: 'var(--danger-soft)',
-    color: 'var(--danger)',
+    color: 'var(--danger-text)',
     fontSize: '0.65rem',
     fontWeight: 700,
     padding: '2px 5px',
@@ -512,7 +512,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   schedule: {
     fontSize: '0.8rem',
-    color: 'var(--brand)',
+    color: 'var(--brand-text)',
     marginTop: '0.3rem',
     fontWeight: 500,
   },
@@ -538,7 +538,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.4rem 0.75rem',
     fontSize: '0.85rem',
     cursor: 'pointer',
-    color: 'var(--danger)',
+    color: 'var(--danger-text)',
     fontWeight: 500,
   },
 };
