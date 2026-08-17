@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
@@ -19,11 +19,29 @@ interface CalendarEvent {
   location?: string;
 }
 
+interface ShiftUser {
+  id: string;
+  name: string;
+  role: 'FAMILY' | 'WORKER';
+}
+
 interface ShiftNote {
   id: string;
   content: string;
   shiftDate: string;
-  user?: { name: string };
+  createdAt?: string;
+  photos?: string[];
+  user?: ShiftUser;
+}
+
+interface ShiftSession {
+  id: string;
+  shiftDate: string;
+  checkedInAt: string | null;
+  checkedOutAt: string | null;
+  checkedInBy?: ShiftUser | null;
+  checkedOutBy?: ShiftUser | null;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
 }
 
 interface ShiftData {
@@ -36,6 +54,7 @@ interface ShiftData {
   };
   calendarEvents: CalendarEvent[];
   shiftNotes: ShiftNote[];
+  shiftSession: ShiftSession;
 }
 
 function isoDate(d: Date): string {
@@ -52,13 +71,27 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function parsePhotoLines(value: string): string[] {
+  return value
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+}
+
 export default function ShiftSummary() {
   const { user } = useAuth();
   const [shift, setShift] = useState<ShiftData | null>(null);
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState('');
+  const [notePhotosText, setNotePhotosText] = useState('');
   const [addingNote, setAddingNote] = useState(false);
   const [noteError, setNoteError] = useState('');
+  const [shiftActionError, setShiftActionError] = useState('');
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutText, setCheckoutText] = useState('');
+  const [checkoutPhotosText, setCheckoutPhotosText] = useState('');
 
   const today = isoDate(new Date());
 
@@ -72,7 +105,6 @@ export default function ShiftSummary() {
       const { data } = await api.get<ShiftData>(`/shifts/${today}`);
       setShift(data);
     } catch {
-      // Shift endpoint may return 404 if no data — treat as empty
       setShift(null);
     } finally {
       setLoading(false);
@@ -87,8 +119,10 @@ export default function ShiftSummary() {
     try {
       const { data } = await api.post<ShiftNote>(`/shifts/${today}/notes`, {
         content: noteText.trim(),
+        photos: parsePhotoLines(notePhotosText),
       });
       setNoteText('');
+      setNotePhotosText('');
       setShift(prev =>
         prev ? { ...prev, shiftNotes: [data, ...prev.shiftNotes] } : prev
       );
@@ -96,6 +130,48 @@ export default function ShiftSummary() {
       setNoteError('Failed to add note.');
     } finally {
       setAddingNote(false);
+    }
+  }
+
+  async function checkIn() {
+    setCheckingIn(true);
+    setShiftActionError('');
+    try {
+      const { data } = await api.post<{ shiftSession: ShiftSession }>(`/shifts/${today}/check-in`);
+      setShift(prev => (prev ? { ...prev, shiftSession: data.shiftSession } : prev));
+    } catch (error: any) {
+      setShiftActionError(error?.response?.data?.error || 'Failed to check in.');
+    } finally {
+      setCheckingIn(false);
+    }
+  }
+
+  async function checkOut(e: React.FormEvent) {
+    e.preventDefault();
+    if (!checkoutText.trim()) {
+      setShiftActionError('Checkout note is required.');
+      return;
+    }
+
+    setCheckingOut(true);
+    setShiftActionError('');
+    try {
+      const { data } = await api.post<{ shiftSession: ShiftSession; note: ShiftNote }>(`/shifts/${today}/check-out`, {
+        content: checkoutText.trim(),
+        photos: parsePhotoLines(checkoutPhotosText),
+      });
+      setShift(prev => prev ? {
+        ...prev,
+        shiftSession: data.shiftSession,
+        shiftNotes: [data.note, ...prev.shiftNotes],
+      } : prev);
+      setCheckoutText('');
+      setCheckoutPhotosText('');
+      setShowCheckoutForm(false);
+    } catch (error: any) {
+      setShiftActionError(error?.response?.data?.error || 'Failed to check out.');
+    } finally {
+      setCheckingOut(false);
     }
   }
 
@@ -109,10 +185,13 @@ export default function ShiftSummary() {
     .slice(0, 3) ?? [];
 
   const urgentTasks = shift?.tasks.list.filter(t => t.priority === 'URGENT' && !t.completed) ?? [];
+  const latestCheckoutNote = useMemo(
+    () => shift?.shiftNotes.find(note => note.user?.role === 'WORKER') ?? null,
+    [shift?.shiftNotes]
+  );
 
   return (
     <div style={styles.page}>
-      {/* Greeting */}
       <div style={styles.greeting}>
         <div>
           <h2 style={styles.greetingTitle}>
@@ -129,8 +208,106 @@ export default function ShiftSummary() {
         <div style={styles.loadingState}>Loading today's shift...</div>
       ) : (
         <div style={styles.grid}>
+          <div style={{ ...styles.card, ...styles.cardWide }}>
+            <div style={styles.cardHeader}>
+              <span style={styles.cardTitle}>Shift Status</span>
+              {shift?.shiftSession && (
+                <span style={statusPillStyle(shift.shiftSession.status)}>{shiftStatusLabel(shift.shiftSession.status)}</span>
+              )}
+            </div>
 
-          {/* Task progress card */}
+            {shift?.shiftSession && (
+              <>
+                <div style={styles.statusMetaWrap}>
+                  <div style={styles.statusMetaBlock}>
+                    <div style={styles.statusMetaLabel}>Checked in</div>
+                    <div style={styles.statusMetaValue}>
+                      {shift.shiftSession.checkedInAt
+                        ? `${formatTime(shift.shiftSession.checkedInAt)}${shift.shiftSession.checkedInBy ? ` — ${shift.shiftSession.checkedInBy.name}` : ''}`
+                        : 'Not yet'}
+                    </div>
+                  </div>
+                  <div style={styles.statusMetaBlock}>
+                    <div style={styles.statusMetaLabel}>Checked out</div>
+                    <div style={styles.statusMetaValue}>
+                      {shift.shiftSession.checkedOutAt
+                        ? `${formatTime(shift.shiftSession.checkedOutAt)}${shift.shiftSession.checkedOutBy ? ` — ${shift.shiftSession.checkedOutBy.name}` : ''}`
+                        : 'Not yet'}
+                    </div>
+                  </div>
+                </div>
+
+                {latestCheckoutNote && (
+                  <div style={styles.handoverCard}>
+                    <div style={styles.handoverTitle}>Latest worker handover</div>
+                    <div style={styles.noteContent}>{latestCheckoutNote.content}</div>
+                    {latestCheckoutNote.photos && latestCheckoutNote.photos.length > 0 && (
+                      <div style={styles.photoList}>
+                        {latestCheckoutNote.photos.map(photo => (
+                          <div key={photo} style={styles.photoTag}>{photo}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {shiftActionError && <div style={styles.noteError}>{shiftActionError}</div>}
+
+                {user?.role === 'WORKER' && (
+                  <div style={styles.shiftActionsWrap}>
+                    {shift.shiftSession.status === 'NOT_STARTED' && (
+                      <button style={styles.primaryBtn} onClick={checkIn} disabled={checkingIn}>
+                        {checkingIn ? 'Checking in…' : 'Check In'}
+                      </button>
+                    )}
+
+                    {shift.shiftSession.status === 'IN_PROGRESS' && !showCheckoutForm && (
+                      <button style={styles.primaryBtn} onClick={() => setShowCheckoutForm(true)}>
+                        Check Out
+                      </button>
+                    )}
+
+                    {shift.shiftSession.status === 'IN_PROGRESS' && showCheckoutForm && (
+                      <form onSubmit={checkOut} style={styles.noteForm}>
+                        <textarea
+                          style={styles.noteInput}
+                          placeholder="Required handover note for checkout…"
+                          value={checkoutText}
+                          onChange={e => setCheckoutText(e.target.value)}
+                          rows={3}
+                        />
+                        <textarea
+                          style={styles.noteInput}
+                          placeholder="Optional photo links/paths — one per line"
+                          value={checkoutPhotosText}
+                          onChange={e => setCheckoutPhotosText(e.target.value)}
+                          rows={2}
+                        />
+                        <div style={styles.formActions}>
+                          <button
+                            type="button"
+                            style={styles.secondaryBtn}
+                            onClick={() => setShowCheckoutForm(false)}
+                            disabled={checkingOut}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            style={styles.primaryBtn}
+                            disabled={checkingOut || !checkoutText.trim()}
+                          >
+                            {checkingOut ? 'Checking out…' : 'Confirm Check Out'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
           <div style={styles.card}>
             <div style={styles.cardHeader}>
               <span style={styles.cardTitle}>Today's Tasks</span>
@@ -186,7 +363,6 @@ export default function ShiftSummary() {
             )}
           </div>
 
-          {/* Calendar events card */}
           <div style={styles.card}>
             <div style={styles.cardHeader}>
               <span style={styles.cardTitle}>Today's Schedule</span>
@@ -216,25 +392,30 @@ export default function ShiftSummary() {
             )}
           </div>
 
-          {/* Shift notes card */}
           <div style={{ ...styles.card, ...styles.cardWide }}>
             <div style={styles.cardHeader}>
               <span style={styles.cardTitle}>Shift Notes</span>
             </div>
 
-            {/* Add note form */}
             <form onSubmit={addNote} style={styles.noteForm}>
               <textarea
                 style={styles.noteInput}
-                placeholder="Add a note for today's shift…"
+                placeholder="Add a shift note…"
                 value={noteText}
                 onChange={e => setNoteText(e.target.value)}
+                rows={2}
+              />
+              <textarea
+                style={styles.noteInput}
+                placeholder="Optional photo links/paths — one per line"
+                value={notePhotosText}
+                onChange={e => setNotePhotosText(e.target.value)}
                 rows={2}
               />
               {noteError && <div style={styles.noteError}>{noteError}</div>}
               <button
                 type="submit"
-                style={styles.noteBtn}
+                style={styles.primaryBtn}
                 disabled={addingNote || !noteText.trim()}
               >
                 {addingNote ? 'Adding…' : 'Add Note'}
@@ -246,8 +427,15 @@ export default function ShiftSummary() {
                 {shift.shiftNotes.map(note => (
                   <div key={note.id} style={styles.noteCard}>
                     <div style={styles.noteContent}>{note.content}</div>
+                    {note.photos && note.photos.length > 0 && (
+                      <div style={styles.photoList}>
+                        {note.photos.map(photo => (
+                          <div key={photo} style={styles.photoTag}>{photo}</div>
+                        ))}
+                      </div>
+                    )}
                     {note.user && (
-                      <div style={styles.noteMeta}>— {note.user.name}</div>
+                      <div style={styles.noteMeta}>— {note.user.name} ({note.user.role === 'WORKER' ? 'worker' : 'family'})</div>
                     )}
                   </div>
                 ))}
@@ -256,7 +444,6 @@ export default function ShiftSummary() {
               <div style={styles.emptyCard}>No notes for today's shift yet.</div>
             )}
           </div>
-
         </div>
       )}
     </div>
@@ -268,6 +455,29 @@ function getTimeOfDay(): string {
   if (h < 12) return 'morning';
   if (h < 17) return 'afternoon';
   return 'evening';
+}
+
+function shiftStatusLabel(status: ShiftSession['status']): string {
+  switch (status) {
+    case 'IN_PROGRESS':
+      return 'In progress';
+    case 'COMPLETED':
+      return 'Completed';
+    default:
+      return 'Not started';
+  }
+}
+
+function statusPillStyle(status: ShiftSession['status']): React.CSSProperties {
+  if (status === 'COMPLETED') {
+    return { ...styles.statusPillBase, background: '#dcfce7', color: '#166534' };
+  }
+
+  if (status === 'IN_PROGRESS') {
+    return { ...styles.statusPillBase, background: '#dbeafe', color: '#1d4ed8' };
+  }
+
+  return { ...styles.statusPillBase, background: '#f3f4f6', color: '#4b5563' };
 }
 
 const styles: Record<string, React.CSSProperties> = {
@@ -326,6 +536,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '1rem',
+    gap: '0.75rem',
   },
   cardTitle: {
     fontWeight: 700,
@@ -337,6 +548,83 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#2563eb',
     textDecoration: 'none',
     fontWeight: 500,
+  },
+  statusPillBase: {
+    borderRadius: '999px',
+    padding: '0.35rem 0.7rem',
+    fontWeight: 600,
+    fontSize: '0.8rem',
+  },
+  statusMetaWrap: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '0.75rem',
+    marginBottom: '1rem',
+  },
+  statusMetaBlock: {
+    background: '#f8fafc',
+    border: '1px solid #e5e7eb',
+    borderRadius: '10px',
+    padding: '0.8rem 0.9rem',
+  },
+  statusMetaLabel: {
+    color: '#6b7280',
+    fontSize: '0.8rem',
+    marginBottom: '0.3rem',
+  },
+  statusMetaValue: {
+    color: '#111827',
+    fontWeight: 600,
+    fontSize: '0.9rem',
+  },
+  handoverCard: {
+    background: '#eff6ff',
+    border: '1px solid #bfdbfe',
+    borderRadius: '10px',
+    padding: '0.85rem 0.95rem',
+    marginBottom: '1rem',
+  },
+  handoverTitle: {
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    color: '#1d4ed8',
+    marginBottom: '0.35rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.02em',
+  },
+  shiftActionsWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    marginTop: '0.25rem',
+  },
+  formActions: {
+    display: 'flex',
+    gap: '0.6rem',
+    justifyContent: 'flex-end',
+    flexWrap: 'wrap',
+  },
+  primaryBtn: {
+    alignSelf: 'flex-end',
+    background: '#2563eb',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '0.65rem 1rem',
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  secondaryBtn: {
+    alignSelf: 'flex-end',
+    background: '#fff',
+    color: '#374151',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    padding: '0.65rem 1rem',
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    cursor: 'pointer',
   },
   progressWrap: {
     display: 'flex',
@@ -477,17 +765,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#dc2626',
     fontSize: '0.85rem',
   },
-  noteBtn: {
-    alignSelf: 'flex-end',
-    background: '#2563eb',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    padding: '0.5rem 1rem',
-    fontSize: '0.9rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
   noteList: {
     display: 'flex',
     flexDirection: 'column',
@@ -500,14 +777,28 @@ const styles: Record<string, React.CSSProperties> = {
     borderLeft: '3px solid #e5e7eb',
   },
   noteContent: {
-    fontSize: '0.9rem',
     color: '#111827',
+    fontSize: '0.92rem',
     lineHeight: 1.5,
+    whiteSpace: 'pre-wrap',
   },
   noteMeta: {
-    fontSize: '0.78rem',
-    color: '#9ca3af',
-    marginTop: '0.35rem',
-    textAlign: 'right',
+    marginTop: '0.4rem',
+    color: '#6b7280',
+    fontSize: '0.8rem',
+  },
+  photoList: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.45rem',
+    marginTop: '0.55rem',
+  },
+  photoTag: {
+    background: '#eef2ff',
+    color: '#4338ca',
+    borderRadius: '999px',
+    padding: '0.25rem 0.55rem',
+    fontSize: '0.75rem',
+    border: '1px solid #c7d2fe',
   },
 };

@@ -79,6 +79,10 @@ Before pushing, run the same checks expected in CI:
 cd server
 npm ci
 npm run db:generate
+npm test
+npx tsx --test src/lib/shift-session.test.ts
+npx tsx --test src/lib/care-profile.test.ts
+npx tsx --test src/lib/incidents.test.ts
 npm run typecheck
 npm run build
 
@@ -88,6 +92,13 @@ npm run typecheck
 npm run build
 ```
 
+### Manual verification for incident logging and family notifications
+
+1. Log in as `worker@shiftly.test`.
+2. Open **Incidents** and submit a report with title, description, severity, and optional photo links/paths.
+3. Confirm the occurred-at timestamp defaults to the current time and can be edited before submit.
+4. Log in as `family@shiftly.test` and confirm the incident appears in the feed.
+5. With a family session open, verify new incidents are pushed in real time to family listeners.
 ## Deployment
 
 ### Running behind nginx at subpath `/shiftly`
@@ -137,5 +148,4 @@ To serve at `/shiftly` instead of `/`, the following changes were made:
 2. **client/src/api/client.ts**: axios `baseURL: '/shiftly/api'`
 3. **client/src/main.tsx**: `<BrowserRouter basename="/shiftly">`
 4. **TasksPage.tsx**: socket.io connection uses `window.location.origin` with custom path `/shiftly/socket.io`
-
-**Known issue:** [#38](https://github.com/pjrobinson85-create/shiftly/issues/38) — blank page when accessing through nginx (likely HMR/CORS issue)
+5. Dashboard/sidebar links stay under the `/shiftly/...` router basename so in-app navigation does not escape the subpath

@@ -70,7 +70,6 @@ jobs:
         env:
           NODE_ENV: test
           JWT_SECRET: ci-test-secret-not-for-prod
-
   client:
     name: Client build + typecheck
     runs-on: ubuntu-latest

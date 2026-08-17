@@ -53,15 +53,25 @@ Deployed on Ubuntu server behind nginx reverse proxy at `/shiftly` subpath (coex
 ## Active Issues
 
 - [#38](https://github.com/pjrobinson85-create/shiftly/issues/38) — Tasks page renders blank after subpath routing setup (open)
+- [#40](https://github.com/pjrobinson85-create/shiftly/issues/40) — Security: harden Google Calendar OAuth callback and token handling (live Google credential setup/manual verification deferred until later)
+- [#9](https://github.com/pjrobinson85-create/shiftly/issues/9) — Incident logging with severity, photo links/paths, and family real-time notifications
 - Stabilization work is being tracked in [`docs/plans/2026-05-20-stabilization-plan.md`](docs/plans/2026-05-20-stabilization-plan.md)
 
 ## Local Verification
 
-Run the same checks expected in CI:
+Run the same checks expected in CI plus the vitest suite and the shift-session, care-profile, and incident regression tests:
 
 ```bash
-cd server && npm ci && npm run typecheck && npm run build
+cd server && npm ci && npm run db:generate && npm test && npx tsx --test src/lib/shift-session.test.ts && npx tsx --test src/lib/care-profile.test.ts && npx tsx --test src/lib/incidents.test.ts && npm run typecheck && npm run build
 cd ../client && npm ci && npm run typecheck && npm run build
 ```
+
+### Incident logging manual verification
+
+- Log in as `worker@shiftly.test` / `password123`
+- Open **Incidents**, submit a report with title, description, severity, and optional photo links/paths
+- Confirm the occurred-at timestamp defaults to the current time but can be adjusted before submit
+- Log in as `family@shiftly.test` / `password123`
+- Confirm the incident appears in the feed and family listeners receive the real-time update
 
 Full setup guide → [CONTRIBUTING.md](CONTRIBUTING.md)

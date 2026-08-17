@@ -4,6 +4,7 @@ import prisma from '../lib/prisma';
 import { logAudit } from '../lib/audit';
 import { sendAlert } from '../lib/telegram';
 import { getSocket } from '../lib/socket';
+import { validateIncidentPayload } from '../lib/incidents';
 
 const router = Router();
 
@@ -58,34 +59,18 @@ router.get('/:id', async (req: AuthRequest, res) => {
 // POST /api/incidents — create an incident report (both roles)
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const body = req.body as {
-      title: string;
-      description: string;
-      severity: 'low' | 'medium' | 'high';
-      occurredAt?: string;
-      photos?: string[];
-    };
-
-    if (!body.title || !body.description || !body.severity) {
-      return res.status(400).json({ error: 'Title, description, and severity are required' });
-    }
-    if (!['low', 'medium', 'high'].includes(body.severity)) {
-      return res.status(400).json({ error: 'severity must be low, medium, or high' });
-    }
-    if (body.occurredAt && isNaN(new Date(body.occurredAt).getTime())) {
-      return res.status(400).json({ error: 'occurredAt is invalid' });
-    }
-    if (body.photos !== undefined && !Array.isArray(body.photos)) {
-      return res.status(400).json({ error: 'photos must be an array of paths' });
+    const validation = validateIncidentPayload(req.body as Record<string, unknown>);
+    if (!validation.ok) {
+      return res.status(400).json({ error: validation.error });
     }
 
     const incident = await prisma.incident.create({
       data: {
-        title: body.title,
-        description: body.description,
-        severity: body.severity,
-        occurredAt: body.occurredAt ? new Date(body.occurredAt) : new Date(),
-        photos: body.photos ?? [],
+        title: validation.data.title,
+        description: validation.data.description,
+        severity: validation.data.severity,
+        occurredAt: validation.data.occurredAt,
+        photos: validation.data.photos,
         userId: req.user!.id,
       },
       include: INCIDENT_INCLUDE,
@@ -100,10 +85,11 @@ router.post('/', async (req: AuthRequest, res) => {
         detail: `${incident.severity.toUpperCase()} incident: "${incident.title}"`,
       },
       req
-    );    getSocket().emit('incident:created', incident);
+    );
+    getSocket().to('FAMILY').emit('incident:created', incident);
 
-    // HIGH severity → immediate Telegram alert to the family.
-    // MEDIUM → alert too (worth knowing in real time). LOW → no ping (reduces noise).
+    // MEDIUM/HIGH severity → immediate Telegram alert to the family.
+    // LOW → no ping (reduces noise).
     if (incident.severity === 'high' || incident.severity === 'medium') {
       const sevLabel = incident.severity.toUpperCase();
       const when = incident.occurredAt.toLocaleString('en-AU', { timeZone: 'Australia/Brisbane' });

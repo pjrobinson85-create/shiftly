@@ -8,6 +8,8 @@ import RecurringTasksPage from './pages/RecurringTasksPage';
 import ShoppingListPage from './pages/ShoppingListPage';
 import CalendarPage from './pages/CalendarPage';
 import ShiftSummary from './pages/ShiftSummary';
+import CareProfilePage from './pages/CareProfilePage';
+import IncidentsPage from './pages/IncidentsPage';
 import { useAuth } from './context/AuthContext';
 
 // FAMILY-only guard — redirects workers away from family pages
@@ -30,6 +32,8 @@ function App() {
               <Route index element={<ShiftSummary />} />
               <Route path="tasks" element={<TasksPage />} />
               <Route path="shopping" element={<ShoppingListPage />} />
+              <Route path="care-profile" element={<CareProfilePage />} />
+              <Route path="incidents" element={<IncidentsPage />} />
               <Route
                 path="recurring"
                 element={

@@ -19,6 +19,7 @@ import calendarRoutes from './routes/calendar';
 import uploadRoutes from './routes/uploads';
 import exportRoutes from './routes/export';
 import userRoutes from './routes/users';
+import careProfileRoutes from './routes/care-profile';
 import { initSocket } from './lib/socket';
 
 const app = express();
@@ -65,6 +66,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/care-profile', careProfileRoutes);
 
 // Uploaded photos — served statically (uploaded dir is 0700 + authed upload route)
 const uploadDir = path.resolve(process.cwd(), 'uploads');
