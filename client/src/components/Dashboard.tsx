@@ -106,8 +106,8 @@ function DashboardHome() {
 
   return (
     <div style={styles.homeCard(dark)}>
-      <h2 style={{ margin: '0 0 0.5rem', color: dark ? '#f1f5f9' : '#111827' }}>Dashboard</h2>
-      <p style={{ color: dark ? '#94a3b8' : '#666', marginBottom: '1.5rem' }}>
+      <h2 style={{ margin: '0 0 0.5rem', color: 'var(--text)' }}>Dashboard</h2>
+      <p style={{ color: 'var(--muted)', marginBottom: '1.5rem' }}>
         {user?.role === 'FAMILY'
           ? 'Add tasks and recurring schedules for your support workers.'
           : 'Your shift task list will appear here when tasks are assigned.'}
@@ -120,11 +120,11 @@ function DashboardHome() {
           <div style={styles.statLabel}>Today's Tasks</div>
         </div>
         <div style={styles.statCard(dark)}>
-          <div style={{ ...styles.statValue, color: '#16a34a' }}>{stats?.completed ?? 0}</div>
+          <div style={{ ...styles.statValue, color: 'var(--success)' }}>{stats?.completed ?? 0}</div>
           <div style={styles.statLabel}>Completed</div>
         </div>
         <div style={styles.statCard(dark)}>
-          <div style={{ ...styles.statValue, color: '#2563eb' }}>{progressPct}%</div>
+          <div style={{ ...styles.statValue, color: 'var(--brand)' }}>{progressPct}%</div>
           <div style={styles.statLabel}>Progress</div>
         </div>
       </div>
@@ -132,7 +132,7 @@ function DashboardHome() {
       {/* Top 5 tasks */}
       {topTasks.length > 0 && (
         <div style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ margin: '0 0 0.75rem', fontSize: '1rem', color: dark ? '#e2e8f0' : '#374151' }}>
+          <h3 style={{ margin: '0 0 0.75rem', fontSize: '1rem', color: 'var(--text-2)' }}>
             Today's Tasks
           </h3>
           <div style={styles.taskList}>
@@ -156,14 +156,14 @@ function TodayTaskCard({ task, dark }: { task: TaskInstance; dark: boolean }) {
     }}>
       <div style={{
         ...styles.taskCheckCircle,
-        background: task.completed ? '#16a34a' : (isUrgent ? '#dc2626' : '#2563eb'),
+        background: task.completed ? 'var(--success)' : (isUrgent ? 'var(--danger)' : 'var(--brand)'),
       }}>
         {task.completed ? '✓' : ''}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <span style={{
           ...styles.todayTaskTitle,
-          color: dark ? (task.completed ? '#6b7280' : '#f1f5f9') : (task.completed ? '#9ca3af' : '#111827'),
+          color: task.completed ? 'var(--muted)' : 'var(--text)',
           textDecoration: task.completed ? 'line-through' : 'none',
         }}>
           {task.title}
@@ -180,12 +180,12 @@ const styles = {
   layout: (dark) => ({
     display: 'flex',
     minHeight: '100vh',
-    background: dark ? '#0f172a' : '#f8fafc',
+    background: 'var(--text)',
   }),
   sidebar: (dark) => ({
     width: '220px',
-    background: dark ? '#020617' : '#1e293b',
-    color: '#fff',
+    background: 'var(--sidebar)',
+    color: 'var(--on-color)',
     padding: '1.5rem 0',
     display: 'flex',
     flexDirection: 'column',
@@ -201,28 +201,28 @@ const styles = {
     gap: '0.25rem',
   },
   navLink: (dark: boolean, isActive = false) => ({
-    color: '#cbd5e1',
+    color: 'var(--sidebar-text)',
     textDecoration: 'none',
     padding: '0.6rem 1.5rem',
     fontSize: '0.95rem',
     cursor: 'pointer',
-    background: isActive ? (dark ? '#1e293b' : 'rgba(255,255,255,0.12)') : 'transparent',
-    borderLeft: isActive ? '3px solid #38bdf8' : '3px solid transparent',
+    background: isActive ? ('var(--nav-active)') : 'transparent',
+    borderLeft: isActive ? '3px solid var(--info)' : '3px solid transparent',
     fontWeight: isActive ? 600 : 400,
   }),
   main: (dark) => ({
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    background: dark ? '#0f172a' : '#f8fafc',
+    background: 'var(--text)',
   }),
   header: (dark) => ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '1rem 2rem',
-    background: dark ? '#1e293b' : '#fff',
-    borderBottom: `1px solid ${dark ? '#334155' : '#e5e7eb'}`,
+    background: 'var(--surface)',
+    borderBottom: '1px solid var(--border)',
   }),
   greeting: {
     fontSize: '1.3rem',
@@ -231,7 +231,7 @@ const styles = {
   },
   role: {
     fontSize: '0.85rem',
-    color: '#6b7280',
+    color: 'var(--muted)',
   },
   headerRight: {
     display: 'flex',
@@ -248,21 +248,21 @@ const styles = {
   logoutBtn: (dark) => ({
     padding: '0.5rem 1rem',
     background: 'transparent',
-    border: `1px solid ${dark ? '#475569' : '#d1d5db'}`,
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '0.9rem',
-    color: dark ? '#e2e8f0' : '#374151',
+    color: 'var(--text-2)',
   }),
   content: {
     flex: 1,
     padding: '2rem',
   },
   homeCard: (dark) => ({
-    background: dark ? '#1e293b' : '#fff',
+    background: 'var(--surface)',
     borderRadius: '12px',
     padding: '2rem',
-    boxShadow: `0 1px 4px ${dark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)'}`,
+    boxShadow: '0 1px 4px var(--shadow-c)',
   }),
   statsRow: {
     display: 'flex',
@@ -271,7 +271,7 @@ const styles = {
   },
   statCard: (dark) => ({
     flex: 1,
-    background: dark ? '#334155' : '#f8fafc',
+    background: 'var(--surface-2)',
     borderRadius: '8px',
     padding: '1rem',
     textAlign: 'center' as const,
@@ -279,12 +279,12 @@ const styles = {
   statValue: {
     fontSize: '1.8rem',
     fontWeight: 700,
-    color: '#111827',
+    color: 'var(--text)',
     marginBottom: '0.25rem',
   },
   statLabel: {
     fontSize: '0.8rem',
-    color: '#6b7280',
+    color: 'var(--muted)',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.03em',
   },
@@ -298,16 +298,16 @@ const styles = {
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.75rem 1rem',
-    background: dark ? '#334155' : '#f8fafc',
+    background: 'var(--surface-2)',
     borderRadius: '8px',
-    borderLeft: '4px solid #2563eb',
+    borderLeft: '4px solid var(--brand)',
   }),
   todayTaskUrgent: {
-    borderLeftColor: '#dc2626',
+    borderLeftColor: 'var(--danger)',
   },
   todayTaskCompleted: {
     opacity: 0.6,
-    borderLeftColor: '#16a34a',
+    borderLeftColor: 'var(--success)',
   },
   taskCheckCircle: {
     width: '28px',
@@ -316,7 +316,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#fff',
+    color: 'var(--on-color)',
     fontSize: '0.8rem',
     fontWeight: 700,
     flexShrink: 0,
@@ -326,8 +326,8 @@ const styles = {
     fontWeight: 500,
   },
   urgentBadge: {
-    background: '#dc2626',
-    color: '#fff',
+    background: 'var(--danger)',
+    color: 'var(--on-color)',
     padding: '0.15rem 0.5rem',
     borderRadius: '4px',
     fontSize: '0.7rem',
@@ -340,6 +340,6 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     height: '100vh',
-    color: '#666',
+    color: 'var(--muted)',
   },
 } satisfies Record<string, CSSProperties | ((...args: any[]) => CSSProperties)>;

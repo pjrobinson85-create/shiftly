@@ -328,7 +328,7 @@ export default function ShiftSummary() {
                   </div>
                   <div style={styles.countDivider} />
                   <div style={styles.countItem}>
-                    <span style={{ ...styles.countNum, color: '#f59e0b' }}>{shift.tasks.pending}</span>
+                    <span style={{ ...styles.countNum, color: 'var(--warning-2)' }}>{shift.tasks.pending}</span>
                     <span style={styles.countLabel}>Pending</span>
                   </div>
                   <div style={styles.countDivider} />
@@ -470,14 +470,14 @@ function shiftStatusLabel(status: ShiftSession['status']): string {
 
 function statusPillStyle(status: ShiftSession['status']): React.CSSProperties {
   if (status === 'COMPLETED') {
-    return { ...styles.statusPillBase, background: '#dcfce7', color: '#166534' };
+    return { ...styles.statusPillBase, background: 'var(--success-soft)', color: 'var(--success-strong)' };
   }
 
   if (status === 'IN_PROGRESS') {
-    return { ...styles.statusPillBase, background: '#dbeafe', color: '#1d4ed8' };
+    return { ...styles.statusPillBase, background: 'var(--info-soft)', color: 'var(--brand-strong)' };
   }
 
-  return { ...styles.statusPillBase, background: '#f3f4f6', color: '#4b5563' };
+  return { ...styles.statusPillBase, background: 'var(--surface-3)', color: 'var(--text-2)' };
 }
 
 const styles: Record<string, React.CSSProperties> = {
@@ -496,26 +496,26 @@ const styles: Record<string, React.CSSProperties> = {
   greetingTitle: {
     fontSize: '1.5rem',
     fontWeight: 700,
-    color: '#111827',
+    color: 'var(--text)',
     margin: '0 0 0.25rem',
   },
   greetingDate: {
-    color: '#6b7280',
+    color: 'var(--muted)',
     fontSize: '0.9rem',
   },
   rolePill: {
-    background: '#f1f5f9',
-    border: '1px solid #e5e7eb',
+    background: 'var(--surface-3)',
+    border: '1px solid var(--border)',
     borderRadius: '99px',
     padding: '0.35rem 0.9rem',
     fontSize: '0.85rem',
     fontWeight: 500,
-    color: '#374151',
+    color: 'var(--text-2)',
   },
   loadingState: {
     textAlign: 'center',
     padding: '3rem',
-    color: '#6b7280',
+    color: 'var(--muted)',
   },
   grid: {
     display: 'grid',
@@ -523,10 +523,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '1rem',
   },
   card: {
-    background: '#fff',
+    background: 'var(--surface)',
     borderRadius: '14px',
     padding: '1.25rem',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    boxShadow: '0 1px 4px var(--shadow-c)',
   },
   cardWide: {
     gridColumn: '1 / -1',
@@ -541,11 +541,11 @@ const styles: Record<string, React.CSSProperties> = {
   cardTitle: {
     fontWeight: 700,
     fontSize: '0.95rem',
-    color: '#111827',
+    color: 'var(--text)',
   },
   viewAll: {
     fontSize: '0.8rem',
-    color: '#2563eb',
+    color: 'var(--brand)',
     textDecoration: 'none',
     fontWeight: 500,
   },
@@ -562,24 +562,24 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '1rem',
   },
   statusMetaBlock: {
-    background: '#f8fafc',
-    border: '1px solid #e5e7eb',
+    background: 'var(--surface-2)',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
     padding: '0.8rem 0.9rem',
   },
   statusMetaLabel: {
-    color: '#6b7280',
+    color: 'var(--muted)',
     fontSize: '0.8rem',
     marginBottom: '0.3rem',
   },
   statusMetaValue: {
-    color: '#111827',
+    color: 'var(--text)',
     fontWeight: 600,
     fontSize: '0.9rem',
   },
   handoverCard: {
-    background: '#eff6ff',
-    border: '1px solid #bfdbfe',
+    background: 'var(--brand-soft)',
+    border: '1px solid var(--brand-border)',
     borderRadius: '10px',
     padding: '0.85rem 0.95rem',
     marginBottom: '1rem',
@@ -587,7 +587,7 @@ const styles: Record<string, React.CSSProperties> = {
   handoverTitle: {
     fontSize: '0.8rem',
     fontWeight: 700,
-    color: '#1d4ed8',
+    color: 'var(--brand-strong)',
     marginBottom: '0.35rem',
     textTransform: 'uppercase',
     letterSpacing: '0.02em',
@@ -606,8 +606,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   primaryBtn: {
     alignSelf: 'flex-end',
-    background: '#2563eb',
-    color: '#fff',
+    background: 'var(--brand)',
+    color: 'var(--on-color)',
     border: 'none',
     borderRadius: '8px',
     padding: '0.65rem 1rem',
@@ -617,9 +617,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   secondaryBtn: {
     alignSelf: 'flex-end',
-    background: '#fff',
-    color: '#374151',
-    border: '1px solid #d1d5db',
+    background: 'var(--surface)',
+    color: 'var(--text-2)',
+    border: '1px solid var(--border-strong)',
     borderRadius: '8px',
     padding: '0.65rem 1rem',
     fontSize: '0.9rem',
@@ -635,20 +635,20 @@ const styles: Record<string, React.CSSProperties> = {
   progressBar: {
     flex: 1,
     height: '10px',
-    background: '#e5e7eb',
+    background: 'var(--border)',
     borderRadius: '99px',
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    background: '#16a34a',
+    background: 'var(--success)',
     borderRadius: '99px',
     transition: 'width 0.4s ease',
   },
   progressLabel: {
     fontSize: '0.85rem',
     fontWeight: 600,
-    color: '#16a34a',
+    color: 'var(--success)',
     minWidth: '36px',
     textAlign: 'right',
   },
@@ -666,26 +666,26 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'block',
     fontSize: '1.4rem',
     fontWeight: 700,
-    color: '#111827',
+    color: 'var(--text)',
     lineHeight: 1,
   },
   countLabel: {
     display: 'block',
     fontSize: '0.75rem',
-    color: '#9ca3af',
+    color: 'var(--faint)',
     marginTop: '0.2rem',
   },
   countDivider: {
     width: '1px',
     height: '32px',
-    background: '#f3f4f6',
+    background: 'var(--surface-3)',
   },
   urgentAlert: {
     display: 'flex',
     gap: '0.6rem',
     alignItems: 'flex-start',
-    background: '#fff8f8',
-    border: '1px solid #fca5a5',
+    background: 'var(--danger-soft)',
+    border: '1px solid var(--danger-border)',
     borderRadius: '8px',
     padding: '0.6rem 0.75rem',
     marginTop: '0.5rem',
@@ -697,15 +697,15 @@ const styles: Record<string, React.CSSProperties> = {
   urgentAlertTitle: {
     fontWeight: 600,
     fontSize: '0.85rem',
-    color: '#dc2626',
+    color: 'var(--danger)',
   },
   urgentTaskItem: {
     fontSize: '0.8rem',
-    color: '#7f1d1d',
+    color: 'var(--danger-strong)',
     marginTop: '0.2rem',
   },
   emptyCard: {
-    color: '#9ca3af',
+    color: 'var(--faint)',
     fontSize: '0.9rem',
   },
   emptyHint: {
@@ -713,7 +713,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.85rem',
   },
   link: {
-    color: '#2563eb',
+    color: 'var(--brand)',
     textDecoration: 'none',
   },
   eventList: {
@@ -729,7 +729,7 @@ const styles: Record<string, React.CSSProperties> = {
   eventTime: {
     fontSize: '0.8rem',
     fontWeight: 600,
-    color: '#2563eb',
+    color: 'var(--brand)',
     minWidth: '52px',
     paddingTop: '2px',
   },
@@ -739,11 +739,11 @@ const styles: Record<string, React.CSSProperties> = {
   eventTitle: {
     fontWeight: 600,
     fontSize: '0.9rem',
-    color: '#111827',
+    color: 'var(--text)',
   },
   eventLocation: {
     fontSize: '0.78rem',
-    color: '#6b7280',
+    color: 'var(--muted)',
     marginTop: '0.15rem',
   },
   noteForm: {
@@ -754,7 +754,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   noteInput: {
     padding: '0.65rem 0.8rem',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '0.9rem',
     outline: 'none',
@@ -762,7 +762,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'inherit',
   },
   noteError: {
-    color: '#dc2626',
+    color: 'var(--danger)',
     fontSize: '0.85rem',
   },
   noteList: {
@@ -771,20 +771,20 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.6rem',
   },
   noteCard: {
-    background: '#f9fafb',
+    background: 'var(--surface-2)',
     borderRadius: '8px',
     padding: '0.75rem 1rem',
-    borderLeft: '3px solid #e5e7eb',
+    borderLeft: '3px solid var(--border)',
   },
   noteContent: {
-    color: '#111827',
+    color: 'var(--text)',
     fontSize: '0.92rem',
     lineHeight: 1.5,
     whiteSpace: 'pre-wrap',
   },
   noteMeta: {
     marginTop: '0.4rem',
-    color: '#6b7280',
+    color: 'var(--muted)',
     fontSize: '0.8rem',
   },
   photoList: {
@@ -794,11 +794,11 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: '0.55rem',
   },
   photoTag: {
-    background: '#eef2ff',
-    color: '#4338ca',
+    background: 'var(--accent-soft)',
+    color: 'var(--accent)',
     borderRadius: '999px',
     padding: '0.25rem 0.55rem',
     fontSize: '0.75rem',
-    border: '1px solid #c7d2fe',
+    border: '1px solid var(--accent-border)',
   },
 };

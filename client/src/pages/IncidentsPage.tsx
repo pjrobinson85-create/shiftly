@@ -160,11 +160,11 @@ export default function IncidentsPage() {
           <div style={styles.statLabel}>Total logged</div>
         </div>
         <div style={styles.statCard(dark)}>
-          <div style={{ ...styles.statValue(dark), color: '#dc2626' }}>{counts.high}</div>
+          <div style={{ ...styles.statValue(dark), color: 'var(--danger)' }}>{counts.high}</div>
           <div style={styles.statLabel}>High severity</div>
         </div>
         <div style={styles.statCard(dark)}>
-          <div style={{ ...styles.statValue(dark), color: '#d97706' }}>{counts.medium}</div>
+          <div style={{ ...styles.statValue(dark), color: 'var(--warning)' }}>{counts.medium}</div>
           <div style={styles.statLabel}>Medium severity</div>
         </div>
       </div>
@@ -286,12 +286,12 @@ export default function IncidentsPage() {
 
 function severityPillStyle(severity: 'low' | 'medium' | 'high') {
   if (severity === 'high') {
-    return { ...styles.severityPillBase, background: '#fef2f2', color: '#b91c1c' };
+    return { ...styles.severityPillBase, background: 'var(--danger-soft)', color: 'var(--danger-strong)' };
   }
   if (severity === 'medium') {
-    return { ...styles.severityPillBase, background: '#fff7ed', color: '#c2410c' };
+    return { ...styles.severityPillBase, background: 'var(--warning-soft)', color: 'var(--warning)' };
   }
-  return { ...styles.severityPillBase, background: '#ecfdf5', color: '#047857' };
+  return { ...styles.severityPillBase, background: 'var(--success-soft)', color: 'var(--success-strong)' };
 }
 
 const styles: Record<string, any> = {
@@ -309,11 +309,11 @@ const styles: Record<string, any> = {
   pageTitle: (dark: boolean) => ({
     margin: 0,
     fontSize: '1.75rem',
-    color: dark ? '#f8fafc' : '#0f172a',
+    color: 'var(--text)',
   }),
   subtitle: (dark: boolean) => ({
     margin: '0.35rem 0 0',
-    color: dark ? '#94a3b8' : '#64748b',
+    color: 'var(--muted)',
     maxWidth: '720px',
   }),
   statsRow: {
@@ -322,22 +322,22 @@ const styles: Record<string, any> = {
     gap: '1rem',
   },
   statCard: (dark: boolean) => ({
-    background: dark ? '#1e293b' : '#fff',
+    background: 'var(--surface)',
     borderRadius: '14px',
     padding: '1rem 1.1rem',
-    boxShadow: '0 10px 30px rgba(15, 23, 42, 0.08)',
+    boxShadow: '0 10px 30px var(--shadow-lg)',
   }),
   statValue: (dark: boolean) => ({
     fontSize: '1.7rem',
     fontWeight: 700,
-    color: dark ? '#f8fafc' : '#0f172a',
+    color: 'var(--text)',
   }),
   statLabel: {
     marginTop: '0.25rem',
     fontSize: '0.8rem',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.04em',
-    color: '#64748b',
+    color: 'var(--muted)',
   },
   layout: {
     display: 'grid',
@@ -346,31 +346,31 @@ const styles: Record<string, any> = {
     alignItems: 'start',
   },
   formCard: (dark: boolean) => ({
-    background: dark ? '#1e293b' : '#fff',
+    background: 'var(--surface)',
     borderRadius: '16px',
     padding: '1.25rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.9rem',
-    boxShadow: '0 10px 30px rgba(15, 23, 42, 0.08)',
+    boxShadow: '0 10px 30px var(--shadow-lg)',
   }),
   feedCard: (dark: boolean) => ({
-    background: dark ? '#1e293b' : '#fff',
+    background: 'var(--surface)',
     borderRadius: '16px',
     padding: '1.25rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    boxShadow: '0 10px 30px rgba(15, 23, 42, 0.08)',
+    boxShadow: '0 10px 30px var(--shadow-lg)',
   }),
   cardTitle: (dark: boolean) => ({
     fontSize: '1.05rem',
     fontWeight: 700,
-    color: dark ? '#f8fafc' : '#0f172a',
+    color: 'var(--text)',
   }),
   helperText: (dark: boolean) => ({
     fontSize: '0.9rem',
-    color: dark ? '#94a3b8' : '#64748b',
+    color: 'var(--muted)',
   }),
   fieldWrap: {
     display: 'flex',
@@ -379,14 +379,14 @@ const styles: Record<string, any> = {
   },
   fieldLabel: (dark: boolean) => ({
     fontWeight: 600,
-    color: dark ? '#e2e8f0' : '#0f172a',
+    color: 'var(--text)',
   }),
   input: (dark: boolean) => ({
     width: '100%',
     borderRadius: '10px',
-    border: `1px solid ${dark ? '#475569' : '#cbd5e1'}`,
-    background: dark ? '#0f172a' : '#fff',
-    color: dark ? '#f8fafc' : '#0f172a',
+    border: '1px solid var(--border-strong)',
+    background: 'var(--surface)',
+    color: 'var(--text)',
     padding: '0.8rem 0.9rem',
     font: 'inherit',
     boxSizing: 'border-box' as const,
@@ -394,9 +394,9 @@ const styles: Record<string, any> = {
   textarea: (dark: boolean) => ({
     width: '100%',
     borderRadius: '10px',
-    border: `1px solid ${dark ? '#475569' : '#cbd5e1'}`,
-    background: dark ? '#0f172a' : '#fff',
-    color: dark ? '#f8fafc' : '#0f172a',
+    border: '1px solid var(--border-strong)',
+    background: 'var(--surface)',
+    color: 'var(--text)',
     padding: '0.8rem 0.9rem',
     font: 'inherit',
     resize: 'vertical' as const,
@@ -410,26 +410,26 @@ const styles: Record<string, any> = {
   error: {
     borderRadius: '10px',
     padding: '0.8rem 0.9rem',
-    background: '#fef2f2',
-    color: '#b91c1c',
+    background: 'var(--danger-soft)',
+    color: 'var(--danger-strong)',
   },
   success: {
     borderRadius: '10px',
     padding: '0.8rem 0.9rem',
-    background: '#ecfdf5',
-    color: '#047857',
+    background: 'var(--success-soft)',
+    color: 'var(--success-strong)',
   },
   primaryBtn: {
     border: 'none',
     borderRadius: '10px',
-    background: '#2563eb',
-    color: '#fff',
+    background: 'var(--brand)',
+    color: 'var(--on-color)',
     padding: '0.85rem 1rem',
     fontWeight: 700,
     cursor: 'pointer',
   },
   emptyState: (dark: boolean) => ({
-    color: dark ? '#94a3b8' : '#64748b',
+    color: 'var(--muted)',
     padding: '1rem 0',
   }),
   listWrap: {
@@ -438,10 +438,10 @@ const styles: Record<string, any> = {
     gap: '0.9rem',
   },
   incidentCard: (dark: boolean) => ({
-    border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`,
+    border: '1px solid var(--border)',
     borderRadius: '14px',
     padding: '1rem',
-    background: dark ? '#0f172a' : '#f8fafc',
+    background: 'var(--text)',
   }),
   incidentHeader: {
     display: 'flex',
@@ -452,16 +452,16 @@ const styles: Record<string, any> = {
   incidentTitle: (dark: boolean) => ({
     fontSize: '1rem',
     fontWeight: 700,
-    color: dark ? '#f8fafc' : '#0f172a',
+    color: 'var(--text)',
   }),
   incidentMeta: (dark: boolean) => ({
     marginTop: '0.25rem',
     fontSize: '0.85rem',
-    color: dark ? '#94a3b8' : '#64748b',
+    color: 'var(--muted)',
   }),
   incidentDescription: (dark: boolean) => ({
     margin: '0.8rem 0 0',
-    color: dark ? '#e2e8f0' : '#334155',
+    color: 'var(--text-2)',
     lineHeight: 1.55,
     whiteSpace: 'pre-wrap' as const,
   }),
@@ -472,8 +472,8 @@ const styles: Record<string, any> = {
     marginTop: '0.8rem',
   },
   photoTag: {
-    background: '#e0f2fe',
-    color: '#0369a1',
+    background: 'var(--info-soft)',
+    color: 'var(--info)',
     borderRadius: '999px',
     padding: '0.35rem 0.65rem',
     fontSize: '0.8rem',

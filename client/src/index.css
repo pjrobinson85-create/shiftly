@@ -1,26 +1,193 @@
+/* ============================================================
+   Shiftly design tokens
+   Light is default; .dark-mode (on <html>) flips the palette.
+   All components use these variables — no raw hexes in pages.
+   ============================================================ */
+:root {
+  /* surfaces */
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --surface-3: #f1f5f9;
+  --sidebar: #1e293b;
+  --sidebar-text: #cbd5e1;
+  --nav-active: rgba(255, 255, 255, 0.12);
+
+  /* lines */
+  --border: #e5e7eb;
+  --border-strong: #cbd5e1;
+
+  /* text */
+  --text: #111827;
+  --text-2: #374151;
+  --muted: #6b7280;
+  --faint: #9ca3af;
+
+  /* brand */
+  --brand: #2563eb;
+  --brand-strong: #1d4ed8;
+  --brand-soft: #eff6ff;
+  --brand-border: #bfdbfe;
+
+  /* semantic */
+  --success: #16a34a;
+  --success-strong: #047857;
+  --success-soft: #ecfdf5;
+  --danger: #dc2626;
+  --danger-strong: #b91c1c;
+  --danger-soft: #fef2f2;
+  --warning: #d97706;
+  --warning-2: #f59e0b;
+  --warning-soft: #fffbeb;
+  --info: #0369a1;
+  --info-soft: #e0f2fe;
+
+  /* always-white text sitting on colored (brand/danger/success) surfaces */
+  --on-color: #ffffff;
+
+  /* accent (indigo) — used on shift-status highlights */
+  --accent: #4338ca;
+  --accent-soft: #eef2ff;
+  --accent-border: #c7d2fe;
+
+  /* danger border on soft-danger surfaces */
+  --danger-border: #fca5a5;
+
+  /* effects */
+  --shadow-c: rgba(0, 0, 0, 0.06);
+  --shadow-lg: rgba(0, 0, 0, 0.1);
+  --backdrop: rgba(15, 23, 42, 0.4);
+}
+
+.dark-mode {
+  --bg: #0b1220;
+  --surface: #151e31;
+  --surface-2: #1e293b;
+  --surface-3: #253349;
+  --sidebar: #0a1120;
+  --sidebar-text: #94a3b8;
+  --nav-active: rgba(59, 130, 246, 0.18);
+
+  --border: #2c3a52;
+  --border-strong: #415273;
+
+  --text: #f1f5f9;
+  --text-2: #cbd5e1;
+  --muted: #94a3b8;
+  --faint: #64748b;
+
+  --brand: #3b82f6;
+  --brand-strong: #60a5fa;
+  --brand-soft: rgba(59, 130, 246, 0.14);
+  --brand-border: #1e3a5f;
+
+  --success: #22c55e;
+  --success-strong: #4ade80;
+  --success-soft: rgba(34, 197, 94, 0.12);
+  --danger: #ef4444;
+  --danger-strong: #f87171;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --danger-border: rgba(239, 68, 68, 0.4);
+
+  --on-color: #ffffff;
+  --accent: #a5b4fc;
+  --accent-soft: rgba(99, 102, 241, 0.14);
+  --accent-border: #312e81;
+  --warning: #fbbf24;
+  --warning-2: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.12);
+  --info: #38bdf8;
+  --info-soft: rgba(56, 189, 248, 0.12);
+
+  --shadow-c: rgba(0, 0, 0, 0.45);
+  --shadow-lg: rgba(0, 0, 0, 0.5);
+  --backdrop: rgba(2, 6, 23, 0.6);
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+}
+
 body {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background: #f5f5f5;
-  color: #1a1a1a;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
-input:focus, select:focus {
-  border-color: #2563eb !important;
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--brand) !important;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3px var(--brand-soft);
 }
 
-a:hover {
-  color: #fff !important;
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 button:hover:not(:disabled) {
-  opacity: 0.9;
+  filter: brightness(1.05);
+}
+
+/* fix: the old global rule forced white text on ALL hovered links,
+   which made in-content links invisible on light backgrounds */
+a {
+  color: inherit;
+}
+
+a:hover {
+  color: var(--brand);
+}
+
+::selection {
+  background: var(--brand-soft);
+}
+
+/* subtle scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+  border: 2px solid var(--bg);
+}
+
+/* shared bits */
+.shiftly-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px var(--shadow-c);
+}
+
+@keyframes shiftly-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }

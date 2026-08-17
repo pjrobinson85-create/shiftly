@@ -41,9 +41,9 @@ function formatDisplayDate(dateStr: string): string {
 
 // Priority color constants — consistent across the app
 const PRIORITY_COLORS = {
-  NORMAL: '#2563eb',    // blue
-  URGENT: '#dc2626',    // red
-  COMPLETED: '#16a34a', // green
+  NORMAL: 'var(--brand)',    // blue
+  URGENT: 'var(--danger)',    // red
+  COMPLETED: 'var(--success)', // green
 };
 
 export default function TasksPage() {
@@ -254,7 +254,7 @@ export default function TasksPage() {
               />
               &nbsp;Normal
             </label>
-            <label style={{ ...styles.priorityLabel(), color: '#dc2626' }}>
+            <label style={{ ...styles.priorityLabel(), color: 'var(--danger)' }}>
               <input
                 type="radio"
                 name="priority"
@@ -399,21 +399,21 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    background: dark ? '#1e293b' : '#fff',
+    background: 'var(--surface)',
     borderRadius: '12px',
     padding: '0.75rem 1rem',
     marginBottom: '1rem',
-    boxShadow: `0 1px 4px ${dark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)'}`,
+    boxShadow: '0 1px 4px var(--shadow-c)',
   }),
   navBtn: (dark) => ({
     background: 'none',
-    border: `1px solid ${dark ? '#475569' : '#e5e7eb'}`,
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     width: '36px',
     height: '36px',
     fontSize: '1.3rem',
     cursor: 'pointer',
-    color: dark ? '#e2e8f0' : '#374151',
+    color: 'var(--text-2)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -424,12 +424,12 @@ const styles = {
   dateLabel: (dark) => ({
     fontWeight: 600,
     fontSize: '1rem',
-    color: dark ? '#f1f5f9' : '#111827',
+    color: 'var(--text)',
   }),
   todayBtn: () => ({
     background: 'none',
     border: 'none',
-    color: '#2563eb',
+    color: 'var(--brand)',
     cursor: 'pointer',
     fontSize: '0.8rem',
     padding: '2px 0',
@@ -443,7 +443,7 @@ const styles = {
   progressBar: (dark) => ({
     flex: 1,
     height: '8px',
-    background: dark ? '#334155' : '#e5e7eb',
+    background: 'var(--border)',
     borderRadius: '99px',
     overflow: 'hidden',
   }),
@@ -455,7 +455,7 @@ const styles = {
   }),
   progressLabel: () => ({
     fontSize: '0.8rem',
-    color: '#6b7280',
+    color: 'var(--muted)',
     whiteSpace: 'nowrap',
   }),
   headerRow: () => ({
@@ -467,12 +467,12 @@ const styles = {
   pageTitle: (dark) => ({
     fontSize: '1.3rem',
     fontWeight: 700,
-    color: dark ? '#f1f5f9' : '#111827',
+    color: 'var(--text)',
     margin: 0,
   }),
   addBtn: () => ({
-    background: '#2563eb',
-    color: '#fff',
+    background: 'var(--brand)',
+    color: 'var(--on-color)',
     border: 'none',
     borderRadius: '8px',
     padding: '0.5rem 1rem',
@@ -481,31 +481,31 @@ const styles = {
     cursor: 'pointer',
   }),
   addForm: (dark) => ({
-    background: dark ? '#1e293b' : '#fff',
+    background: 'var(--surface)',
     borderRadius: '12px',
     padding: '1.25rem',
     marginBottom: '1rem',
-    boxShadow: `0 1px 4px ${dark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)'}`,
+    boxShadow: '0 1px 4px var(--shadow-c)',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
   }),
   input: (dark) => ({
     padding: '0.6rem 0.8rem',
-    border: `1px solid ${dark ? '#475569' : '#e5e7eb'}`,
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '0.95rem',
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
-    background: dark ? '#0f172a' : '#fff',
-    color: dark ? '#e2e8f0' : '#111827',
+    background: 'var(--surface)',
+    color: 'var(--text)',
   }),
   priorityRow: (dark) => ({
     display: 'flex',
     gap: '1.5rem',
     fontSize: '0.9rem',
-    color: dark ? '#e2e8f0' : '#374151',
+    color: 'var(--text-2)',
   }),
   priorityLabel: () => ({
     display: 'flex',
@@ -514,8 +514,8 @@ const styles = {
     gap: '0.25rem',
   }),
   submitBtn: () => ({
-    background: '#2563eb',
-    color: '#fff',
+    background: 'var(--brand)',
+    color: 'var(--on-color)',
     border: 'none',
     borderRadius: '8px',
     padding: '0.65rem',
@@ -524,8 +524,8 @@ const styles = {
     cursor: 'pointer',
   }),
   error: () => ({
-    background: '#fef2f2',
-    color: '#dc2626',
+    background: 'var(--danger-soft)',
+    color: 'var(--danger)',
     padding: '0.75rem 1rem',
     borderRadius: '8px',
     marginBottom: '1rem',
@@ -534,17 +534,17 @@ const styles = {
   emptyState: (dark) => ({
     textAlign: 'center' as const,
     padding: '3rem 1rem',
-    color: dark ? '#94a3b8' : '#6b7280',
+    color: 'var(--muted)',
   }),
   emptyIcon: () => ({
     fontSize: '3rem',
     marginBottom: '0.5rem',
-    color: '#d1d5db',
+    color: 'var(--border-strong)',
   }),
   emptyHint: () => ({
     fontSize: '0.85rem',
     marginTop: '0.5rem',
-    color: '#9ca3af',
+    color: 'var(--faint)',
   }),
   taskList: () => ({
     display: 'flex',
@@ -556,9 +556,9 @@ const styles = {
     alignItems: 'center',
     gap: '0.75rem',
     padding: '1rem',
-    background: dark ? '#1e293b' : '#fff',
+    background: 'var(--surface)',
     borderRadius: '8px',
-    boxShadow: `0 1px 3px ${dark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.06)'}`,
+    boxShadow: '0 1px 3px var(--shadow-c)',
   }),
   taskCompleted: () => ({
     opacity: 0.6,
@@ -586,7 +586,7 @@ const styles = {
     height: '32px',
     borderRadius: '50%',
     background: PRIORITY_COLORS.COMPLETED,
-    color: '#fff',
+    color: 'var(--on-color)',
     fontSize: '1rem',
     fontWeight: 700,
     display: 'flex',
@@ -607,7 +607,7 @@ const styles = {
   taskTitle: (dark) => ({
     fontSize: '1rem',
     fontWeight: 600,
-    color: dark ? '#f1f5f9' : '#111827',
+    color: 'var(--text)',
   }),
   taskTitleDone: () => ({
     textDecoration: 'line-through',
@@ -615,7 +615,7 @@ const styles = {
   }),
   urgentBadge: () => ({
     background: PRIORITY_COLORS.URGENT,
-    color: '#fff',
+    color: 'var(--on-color)',
     padding: '0.15rem 0.5rem',
     borderRadius: '4px',
     fontSize: '0.7rem',
@@ -623,12 +623,12 @@ const styles = {
     textTransform: 'uppercase' as const,
   }),
   recurringBadge: () => ({
-    color: '#9ca3af',
+    color: 'var(--faint)',
     fontSize: '1rem',
   }),
   taskDesc: (dark) => ({
     fontSize: '0.85rem',
-    color: dark ? '#94a3b8' : '#6b7280',
+    color: 'var(--muted)',
     marginTop: '0.25rem',
   }),
   taskDescDone: () => ({
@@ -636,21 +636,21 @@ const styles = {
   }),
   taskMeta: () => ({
     fontSize: '0.8rem',
-    color: '#9ca3af',
+    color: 'var(--faint)',
     marginTop: '0.25rem',
   }),
   completedTime: () => ({
     fontSize: '0.8rem',
-    color: '#9ca3af',
+    color: 'var(--faint)',
   }),
   dueTime: () => ({
     fontSize: '0.8rem',
-    color: '#9ca3af',
+    color: 'var(--faint)',
   }),
   deleteBtn: (dark) => ({
     background: 'none',
     border: 'none',
-    color: dark ? '#ef4444' : '#dc2626',
+    color: 'var(--danger)',
     cursor: 'pointer',
     fontSize: '1rem',
     padding: '0.25rem',

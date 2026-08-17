@@ -256,7 +256,7 @@ export default function RecurringTasksPage() {
                   />
                   &nbsp;Normal
                 </label>
-                <label style={{ ...styles.radioLabel, color: '#dc2626' }}>
+                <label style={{ ...styles.radioLabel, color: 'var(--danger)' }}>
                   <input
                     type="radio"
                     name="priority"
@@ -287,7 +287,7 @@ export default function RecurringTasksPage() {
         <div style={styles.emptyState}>
           <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📋</div>
           <div>No recurring tasks yet.</div>
-          <div style={{ fontSize: '0.85rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.85rem', color: 'var(--faint)', marginTop: '0.5rem' }}>
             Add a task above and click "Generate this week" to schedule instances.
           </div>
         </div>
@@ -338,11 +338,11 @@ const styles: Record<string, React.CSSProperties> = {
   pageTitle: {
     fontSize: '1.3rem',
     fontWeight: 700,
-    color: '#111827',
+    color: 'var(--text)',
     margin: '0 0 0.25rem',
   },
   subtitle: {
-    color: '#6b7280',
+    color: 'var(--muted)',
     fontSize: '0.875rem',
     margin: 0,
   },
@@ -352,8 +352,8 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
   },
   btn: {
-    background: '#2563eb',
-    color: '#fff',
+    background: 'var(--brand)',
+    color: 'var(--on-color)',
     border: 'none',
     borderRadius: '8px',
     padding: '0.55rem 1rem',
@@ -362,39 +362,39 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   btnSecondary: {
-    background: '#f1f5f9',
-    color: '#374151',
-    border: '1px solid #e5e7eb',
+    background: 'var(--surface-3)',
+    color: 'var(--text-2)',
+    border: '1px solid var(--border)',
   },
   error: {
-    background: '#fef2f2',
-    color: '#dc2626',
+    background: 'var(--danger-soft)',
+    color: 'var(--danger)',
     padding: '0.75rem 1rem',
     borderRadius: '8px',
     fontSize: '0.9rem',
     marginBottom: '1rem',
   },
   successMsg: {
-    background: '#f0fdf4',
-    color: '#16a34a',
+    background: 'var(--success-soft)',
+    color: 'var(--success)',
     padding: '0.75rem 1rem',
     borderRadius: '8px',
     fontSize: '0.9rem',
     marginBottom: '1rem',
   },
   formCard: {
-    background: '#fff',
+    background: 'var(--surface)',
     borderRadius: '12px',
     padding: '1.5rem',
     marginBottom: '1.5rem',
-    boxShadow: '0 1px 8px rgba(0,0,0,0.08)',
-    border: '1px solid #e5e7eb',
+    boxShadow: '0 1px 8px var(--shadow-lg)',
+    border: '1px solid var(--border)',
   },
   formTitle: {
     margin: '0 0 1.25rem',
     fontSize: '1rem',
     fontWeight: 700,
-    color: '#111827',
+    color: 'var(--text)',
   },
   form: {
     display: 'flex',
@@ -407,11 +407,11 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.3rem',
     fontSize: '0.85rem',
     fontWeight: 500,
-    color: '#374151',
+    color: 'var(--text-2)',
   },
   input: {
     padding: '0.6rem 0.8rem',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     fontSize: '0.95rem',
     outline: 'none',
@@ -432,7 +432,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     fontSize: '0.9rem',
     cursor: 'pointer',
-    color: '#374151',
+    color: 'var(--text-2)',
   },
   formActions: {
     display: 'flex',
@@ -442,20 +442,20 @@ const styles: Record<string, React.CSSProperties> = {
   },
   cancelBtn: {
     background: 'none',
-    border: '1px solid #e5e7eb',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
     padding: '0.55rem 1rem',
     fontSize: '0.9rem',
     cursor: 'pointer',
-    color: '#374151',
+    color: 'var(--text-2)',
   },
   emptyState: {
     textAlign: 'center',
     padding: '3rem 2rem',
-    background: '#fff',
+    background: 'var(--surface)',
     borderRadius: '12px',
-    color: '#6b7280',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    color: 'var(--muted)',
+    boxShadow: '0 1px 4px var(--shadow-c)',
   },
   taskList: {
     display: 'flex',
@@ -463,10 +463,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '0.6rem',
   },
   taskCard: {
-    background: '#fff',
+    background: 'var(--surface)',
     borderRadius: '12px',
     padding: '1rem 1.25rem',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    boxShadow: '0 1px 4px var(--shadow-c)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -484,21 +484,21 @@ const styles: Record<string, React.CSSProperties> = {
     height: '8px',
     minWidth: '8px',
     borderRadius: '50%',
-    background: '#dc2626',
+    background: 'var(--danger)',
     marginTop: '6px',
   },
   taskTitle: {
     fontWeight: 600,
     fontSize: '0.95rem',
-    color: '#111827',
+    color: 'var(--text)',
     display: 'flex',
     alignItems: 'center',
     gap: '0.4rem',
     flexWrap: 'wrap',
   },
   urgentBadge: {
-    background: '#fee2e2',
-    color: '#dc2626',
+    background: 'var(--danger-soft)',
+    color: 'var(--danger)',
     fontSize: '0.65rem',
     fontWeight: 700,
     padding: '2px 5px',
@@ -507,12 +507,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   taskDesc: {
     fontSize: '0.85rem',
-    color: '#6b7280',
+    color: 'var(--muted)',
     marginTop: '0.2rem',
   },
   schedule: {
     fontSize: '0.8rem',
-    color: '#2563eb',
+    color: 'var(--brand)',
     marginTop: '0.3rem',
     fontWeight: 500,
   },
@@ -522,23 +522,23 @@ const styles: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   editBtn: {
-    background: '#f1f5f9',
-    border: '1px solid #e5e7eb',
+    background: 'var(--surface-3)',
+    border: '1px solid var(--border)',
     borderRadius: '6px',
     padding: '0.4rem 0.75rem',
     fontSize: '0.85rem',
     cursor: 'pointer',
-    color: '#374151',
+    color: 'var(--text-2)',
     fontWeight: 500,
   },
   deleteBtn: {
     background: 'none',
-    border: '1px solid #fca5a5',
+    border: '1px solid var(--danger-border)',
     borderRadius: '6px',
     padding: '0.4rem 0.75rem',
     fontSize: '0.85rem',
     cursor: 'pointer',
-    color: '#dc2626',
+    color: 'var(--danger)',
     fontWeight: 500,
   },
 };
