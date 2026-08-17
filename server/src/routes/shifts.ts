@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { AuthRequest, requireAuth } from '../middleware/auth';
 import prisma from '../lib/prisma';
+import { getSocket } from '../lib/socket';
 
 const router = Router();
 
@@ -75,10 +76,7 @@ router.post('/:date/notes', async (req: AuthRequest, res) => {
         userId: req.user!.id,
       },
       include: { user: { select: { id: true, name: true } } },
-    });
-
-    const { io } = await import('../index');
-    io.emit('note:created', note);
+    });    getSocket().emit('note:created', note);
 
     res.status(201).json(note);
   } catch (error) {

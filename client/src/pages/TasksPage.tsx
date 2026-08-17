@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { CSSProperties } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import api from '../api/client';
@@ -192,12 +193,12 @@ export default function TasksPage() {
       {/* Date nav */}
       <div style={styles.dateNav(dark)}>
         <button style={styles.navBtn(dark)} onClick={() => shiftDay(-1)}>‹</button>
-        <div style={styles.dateCenter}>
+        <div style={styles.dateCenter()}>
           <div style={styles.dateLabel(dark)}>
             {isToday ? 'Today' : formatDisplayDate(selectedDate)}
           </div>
           {!isToday && (
-            <button style={styles.todayBtn} onClick={() => setSelectedDate(today)}>
+            <button style={styles.todayBtn()} onClick={() => setSelectedDate(today)}>
               Back to today
             </button>
           )}
@@ -207,19 +208,19 @@ export default function TasksPage() {
 
       {/* Progress bar */}
       {totalCount > 0 && (
-        <div style={styles.progressWrap}>
+        <div style={styles.progressWrap()}>
           <div style={styles.progressBar(dark)}>
-            <div style={{ ...styles.progressFill, width: `${progressPct}%` }} />
+            <div style={{ ...styles.progressFill(), width: `${progressPct}%` }} />
           </div>
-          <span style={styles.progressLabel}>{completedCount}/{totalCount} tasks done</span>
+          <span style={styles.progressLabel()}>{completedCount}/{totalCount} tasks done</span>
         </div>
       )}
 
       {/* Header row */}
-      <div style={styles.headerRow}>
+      <div style={styles.headerRow()}>
         <h2 style={styles.pageTitle(dark)}>Tasks</h2>
         {user?.role === 'FAMILY' && (
-          <button style={styles.addBtn} onClick={() => setShowAddForm(!showAddForm)}>
+          <button style={styles.addBtn()} onClick={() => setShowAddForm(!showAddForm)}>
             {showAddForm ? '✕ Cancel' : '+ Add Task'}
           </button>
         )}
@@ -243,7 +244,7 @@ export default function TasksPage() {
             onChange={e => setNewDesc(e.target.value)}
           />
           <div style={styles.priorityRow(dark)}>
-            <label style={styles.priorityLabel}>
+            <label style={styles.priorityLabel()}>
               <input
                 type="radio"
                 name="priority"
@@ -253,7 +254,7 @@ export default function TasksPage() {
               />
               &nbsp;Normal
             </label>
-            <label style={{ ...styles.priorityLabel, color: '#dc2626' }}>
+            <label style={{ ...styles.priorityLabel(), color: '#dc2626' }}>
               <input
                 type="radio"
                 name="priority"
@@ -264,27 +265,27 @@ export default function TasksPage() {
               &nbsp;Urgent
             </label>
           </div>
-          <button type="submit" disabled={addingTask} style={styles.submitBtn}>
+          <button type="submit" disabled={addingTask} style={styles.submitBtn()}>
             {addingTask ? 'Adding...' : 'Add Task'}
           </button>
         </form>
       )}
 
-      {error && <div style={styles.error}>{error}</div>}
+      {error && <div style={styles.error()}>{error}</div>}
 
       {/* Task list */}
       {loading ? (
         <div style={styles.emptyState(dark)}>Loading tasks...</div>
       ) : tasks.length === 0 ? (
         <div style={styles.emptyState(dark)}>
-          <div style={styles.emptyIcon}>✓</div>
+          <div style={styles.emptyIcon()}>✓</div>
           <div>No tasks for this day</div>
           {user?.role === 'FAMILY' && (
-            <div style={styles.emptyHint}>Use the + Add Task button to add one</div>
+            <div style={styles.emptyHint()}>Use the + Add Task button to add one</div>
           )}
         </div>
       ) : (
-        <div style={styles.taskList}>
+        <div style={styles.taskList()}>
           {tasks.map(task => (
             <TaskCard
               key={task.id}
@@ -340,12 +341,12 @@ function TaskCard({ task, role, dark, completing, onComplete, onDelete }: TaskCa
           {completing ? '...' : '✓'}
         </button>
       ) : (
-        <div style={{ ...styles.completedIcon, background: PRIORITY_COLORS.COMPLETED }}>✓</div>
+        <div style={{ ...styles.completedIcon(), background: PRIORITY_COLORS.COMPLETED }}>✓</div>
       )}
 
       {/* Task info */}
-      <div style={styles.taskInfo}>
-        <div style={styles.taskTitleRow}>
+      <div style={styles.taskInfo()}>
+        <div style={styles.taskTitleRow()}>
           <span style={{
             ...styles.taskTitle(dark),
             ...(task.completed ? styles.taskTitleDone : {}),
@@ -353,10 +354,10 @@ function TaskCard({ task, role, dark, completing, onComplete, onDelete }: TaskCa
             {task.title}
           </span>
           {isUrgent && !task.completed && (
-            <span style={styles.urgentBadge}>URGENT</span>
+            <span style={styles.urgentBadge()}>URGENT</span>
           )}
           {task.isRecurring && (
-            <span style={styles.recurringBadge}>↻</span>
+            <span style={styles.recurringBadge()}>↻</span>
           )}
         </div>
         {task.description && (
@@ -367,16 +368,16 @@ function TaskCard({ task, role, dark, completing, onComplete, onDelete }: TaskCa
             {task.description}
           </div>
         )}
-        <div style={styles.taskMeta}>
+        <div style={styles.taskMeta()}>
           {task.completed ? (
-            <span style={styles.completedTime}>
+            <span style={styles.completedTime()}>
               Completed by {task.completedBy?.name || 'someone'}{' '}
               {task.completedAt
                 ? new Date(task.completedAt).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })
                 : ''}
             </span>
           ) : (
-            <span style={styles.dueTime}>Due {dueTime}{task.createdBy?.name ? ` · by ${task.createdBy.name}` : ''}</span>
+            <span style={styles.dueTime()}>Due {dueTime}{task.createdBy?.name ? ` · by ${task.createdBy.name}` : ''}</span>
           )}
         </div>
       </div>
@@ -389,7 +390,7 @@ function TaskCard({ task, role, dark, completing, onComplete, onDelete }: TaskCa
   );
 }
 
-const styles: Record<string, (dark?: boolean) => React.CSSProperties | undefined> = {
+const styles = {
   page: () => ({
     maxWidth: '680px',
     margin: '0 auto',
@@ -656,4 +657,4 @@ const styles: Record<string, (dark?: boolean) => React.CSSProperties | undefined
     opacity: 0.6,
     flexShrink: 0,
   }),
-};
+} satisfies Record<string, (...args: any[]) => CSSProperties>;

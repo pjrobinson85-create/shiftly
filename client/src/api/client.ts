@@ -1,5 +1,10 @@
 import axios from 'axios';
 
+type PendingRequest = {
+  resolve: (token: string) => void;
+  reject: () => void;
+};
+
 const api = axios.create({
   baseURL: '/shiftly/api',
   withCredentials: true, // send cookies (refresh token) to server
@@ -15,7 +20,7 @@ api.interceptors.request.use((config) => {
 });
 
 let isRefreshing = false;
-let pendingRequests: Array<{ resolve: (token: string) => void; reject: () => void }> = [];
+let pendingRequests: PendingRequest[] = [];
 
 // Auto-refresh on 401 — exchange refresh token for new access token
 api.interceptors.response.use(
@@ -42,7 +47,9 @@ api.interceptors.response.use(
       // Another request is already refreshing — queue this one.
       return new Promise<string>((resolve, reject) => {
         pendingRequests.push({ resolve, reject });
-      }).then(() => api(originalRequest)).catch(reject);
+      })
+        .then(() => api(originalRequest))
+        .catch(() => Promise.reject(error));
     }
 
     originalRequest._retried = true;

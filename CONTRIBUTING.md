@@ -71,6 +71,23 @@ shiftly/
 6. Register routes in `server/src/index.ts` and pages in `client/src/App.tsx`
 7. Test locally, then push and open a PR
 
+### Local Verification
+
+Before pushing, run the same checks expected in CI:
+
+```bash
+cd server
+npm ci
+npm run db:generate
+npm run typecheck
+npm run build
+
+cd ../client
+npm ci
+npm run typecheck
+npm run build
+```
+
 ## Deployment
 
 ### Running behind nginx at subpath `/shiftly`

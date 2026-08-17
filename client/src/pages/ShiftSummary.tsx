@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 
@@ -133,7 +134,7 @@ export default function ShiftSummary() {
           <div style={styles.card}>
             <div style={styles.cardHeader}>
               <span style={styles.cardTitle}>Today's Tasks</span>
-              <a href="/tasks" style={styles.viewAll}>View all →</a>
+              <Link to="/tasks" style={styles.viewAll}>View all →</Link>
             </div>
             {shift?.tasks.total ? (
               <>
@@ -177,8 +178,8 @@ export default function ShiftSummary() {
                 No tasks scheduled for today.
                 {user?.role === 'FAMILY' && (
                   <div style={styles.emptyHint}>
-                    <a href="/tasks" style={styles.link}>Add tasks</a> or{' '}
-                    <a href="/recurring" style={styles.link}>generate from recurring schedule</a>
+                    <Link to="/tasks" style={styles.link}>Add tasks</Link> or{' '}
+                    <Link to="/recurring" style={styles.link}>generate from recurring schedule</Link>
                   </div>
                 )}
               </div>
@@ -189,7 +190,7 @@ export default function ShiftSummary() {
           <div style={styles.card}>
             <div style={styles.cardHeader}>
               <span style={styles.cardTitle}>Today's Schedule</span>
-              <a href="/calendar" style={styles.viewAll}>View calendar →</a>
+              <Link to="/calendar" style={styles.viewAll}>View calendar →</Link>
             </div>
             {upcomingEvents.length > 0 ? (
               <div style={styles.eventList}>
@@ -208,7 +209,7 @@ export default function ShiftSummary() {
                 No upcoming events today.
                 {user?.role === 'FAMILY' && (
                   <div style={styles.emptyHint}>
-                    <a href="/calendar" style={styles.link}>Sync Google Calendar</a> to show appointments
+                    <Link to="/calendar" style={styles.link}>Sync Google Calendar</Link> to show appointments
                   </div>
                 )}
               </div>

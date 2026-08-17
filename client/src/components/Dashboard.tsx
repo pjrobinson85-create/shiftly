@@ -1,7 +1,8 @@
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { Navigate, NavLink, Outlet } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 import api from '../api/client';
 
 interface TaskInstance {
@@ -68,15 +69,14 @@ export default function Dashboard() {
 }
 
 function SidebarLink({ to, label, dark }: { to: string; label: string; dark: boolean }) {
-  const navigate = useNavigate();
   return (
-    <a
-      href={to}
-      onClick={(e) => { e.preventDefault(); navigate(to); }}
-      style={styles.navLink(dark)}
+    <NavLink
+      to={to}
+      end={to === '/'}
+      style={({ isActive }) => styles.navLink(dark, isActive)}
     >
       {label}
-    </a>
+    </NavLink>
   );
 }
 
@@ -174,7 +174,7 @@ function TodayTaskCard({ task, dark }: { task: TaskInstance; dark: boolean }) {
   );
 }
 
-const styles: Record<string, (dark?: boolean) => React.CSSProperties | undefined> = {
+const styles = {
   layout: (dark) => ({
     display: 'flex',
     minHeight: '100vh',
@@ -198,12 +198,15 @@ const styles: Record<string, (dark?: boolean) => React.CSSProperties | undefined
     flexDirection: 'column',
     gap: '0.25rem',
   },
-  navLink: (dark) => ({
-    color: dark ? '#cbd5e1' : '#cbd5e1',
+  navLink: (dark: boolean, isActive = false) => ({
+    color: '#cbd5e1',
     textDecoration: 'none',
     padding: '0.6rem 1.5rem',
     fontSize: '0.95rem',
     cursor: 'pointer',
+    background: isActive ? (dark ? '#1e293b' : 'rgba(255,255,255,0.12)') : 'transparent',
+    borderLeft: isActive ? '3px solid #38bdf8' : '3px solid transparent',
+    fontWeight: isActive ? 600 : 400,
   }),
   main: (dark) => ({
     flex: 1,
@@ -337,4 +340,4 @@ const styles: Record<string, (dark?: boolean) => React.CSSProperties | undefined
     height: '100vh',
     color: '#666',
   },
-};
+} satisfies Record<string, CSSProperties | ((...args: any[]) => CSSProperties)>;
