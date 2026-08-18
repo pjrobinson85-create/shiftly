@@ -10,8 +10,10 @@ client/dist/
 .env.local
 
 # Prisma
-server/prisma/migrations/
+# Migrations are version history — they must be tracked. Only the local db file is ignored.
+# server/prisma/migrations/  (do NOT ignore — CI needs this to build the schema)
 *.db
+dev.db-journal
 
 # IDE
 .vscode/
