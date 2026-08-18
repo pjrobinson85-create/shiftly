@@ -51,6 +51,18 @@ describe('Export routes (NDIS CSV)', () => {
 
   it('GET /api/export/activity returns the audit trail as CSV', async () => {
     const token = await workerToken();
+
+    // Write our own audit entry so this test is independent of test-file ordering
+    const workerId = (await prisma.user.findUnique({ where: { email: 'worker@shiftly.test' } }))!.id;
+    const log = await prisma.auditLog.create({
+      data: {
+        action: 'task.completed',
+        entity: 'task',
+        detail: 'audit-entry written by export test',
+        userId: workerId,
+      },
+    });
+
     const res = await request(app)
       .get(`/api/export/activity?from=${fromStr}&to=${toStr}`)
       .set('Authorization', `Bearer ${token}`);
@@ -59,8 +71,9 @@ describe('Export routes (NDIS CSV)', () => {
     expect(res.headers['content-type']).toMatch(/text\/csv/);
     const text = (res.text as string).replace(/^\uFEFF/, '');
     expect(text.startsWith('Timestamp,User,Action,Entity,Entity ID,Detail')).toBe(true);
-    // the task/incident tests have written audit entries today
-    expect(text).toMatch(/task\.|incident\./);
+    expect(text).toMatch(/task\./);
+
+    await prisma.auditLog.delete({ where: { id: log.id } });
   });
 
   it('GET /api/export/incidents rejects to < from', async () => {

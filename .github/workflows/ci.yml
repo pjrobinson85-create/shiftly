@@ -180,6 +180,7 @@ jobs:
         run: |
           nohup "$CHROME_BIN" --headless=new --no-sandbox --disable-gpu \
             --remote-debugging-port=9225 \
+            --remote-allow-origins=* \
             --user-data-dir=/tmp/chrome-ci-profile > /tmp/chrome.log 2>&1 &
           for i in $(seq 1 20); do
             if curl -sf http://127.0.0.1:9225/json/version; then exit 0; fi
