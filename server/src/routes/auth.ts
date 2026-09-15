@@ -43,12 +43,13 @@ function clearRefreshCookie(res: Response) {
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, role, phone } = req.body as {
+    const { email, password, name, role, phone, inviteCode } = req.body as {
       email: string;
       password: string;
       name: string;
       role?: 'FAMILY' | 'WORKER';
       phone?: string;
+      inviteCode?: string;
     };
 
     if (!email || !password || !name) {
@@ -57,6 +58,35 @@ router.post('/register', async (req, res) => {
 
     if (password.length < 8) {
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    // Registration is open for workers, but FAMILY is a privileged role
+    // (read access to care profiles, internal notes, incidents, calendar).
+    // It can only be claimed with a valid invite code, and only if the
+    // server has an invite code configured at all.
+    let finalRole: 'FAMILY' | 'WORKER' = 'WORKER';
+    if (role === 'FAMILY') {
+      const configured = process.env.FAMILY_INVITE_CODE;
+      if (!configured) {
+        return res
+          .status(403)
+          .json({ error: 'Family accounts require an invitation code' });
+      }
+      const ok =
+        typeof inviteCode === 'string' &&
+        inviteCode.length > 0 &&
+        inviteCode.length === configured.length &&
+        crypto
+          .timingSafeEqual(
+            crypto.createHash('sha256').update(inviteCode).digest(),
+            crypto.createHash('sha256').update(configured).digest()
+          );
+      if (!ok) {
+        return res
+          .status(403)
+          .json({ error: 'Family accounts require a valid invitation code' });
+      }
+      finalRole = 'FAMILY';
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -70,7 +100,7 @@ router.post('/register', async (req, res) => {
         email,
         password: hashedPassword,
         name,
-        role: role ?? 'WORKER',
+        role: finalRole,
         phone,
       },
       select: { id: true, email: true, name: true, role: true, phone: true },

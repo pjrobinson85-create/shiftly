@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<'FAMILY' | 'WORKER'>('WORKER');
+  const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -23,7 +24,13 @@ export default function LoginPage() {
         await login(email, password);
         navigate('/');
       } else {
-        await register({ email, password, name, role });
+        await register({
+          email,
+          password,
+          name,
+          role,
+          inviteCode: inviteCode || undefined,
+        });
         navigate('/');
       }
     } catch (err: any) {
@@ -107,6 +114,23 @@ export default function LoginPage() {
                 <option value="WORKER">Support Worker</option>
                 <option value="FAMILY">Family Member</option>
               </select>
+            </label>
+          )}
+
+          {mode === 'register' && role === 'FAMILY' && (
+            <label style={styles.label}>
+              Family invitation code
+              <input
+                type="password"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                required
+                style={styles.input}
+                placeholder="Code provided by the family"
+              />
+              <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+                Invites are required for family access
+              </span>
             </label>
           )}
 

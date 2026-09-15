@@ -23,6 +23,7 @@ interface RegisterData {
   name: string;
   role: 'FAMILY' | 'WORKER';
   phone?: string;
+  inviteCode?: string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);

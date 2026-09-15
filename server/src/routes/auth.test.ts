@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import request from 'supertest';
 import { app } from '../index';
 import { familyToken } from '../test/helpers';
@@ -62,5 +62,59 @@ describe('Auth routes', () => {
   it('GET /api/auth/me returns 401 without a token', async () => {
     const res = await request(app).get('/api/auth/me');
     expect(res.status).toBe(401);
+  });
+});
+
+describe('Registration role gate', () => {
+  const original = process.env.FAMILY_INVITE_CODE;
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.FAMILY_INVITE_CODE;
+    else process.env.FAMILY_INVITE_CODE = original;
+  });
+
+  it('POST /api/auth/register: FAMILY with no invite code configured -> 403', async () => {
+    delete process.env.FAMILY_INVITE_CODE;
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        email: `fam-${Date.now()}@shiftly.test`,
+        password: 'password123',
+        name: 'Fam',
+        role: 'FAMILY',
+        inviteCode: 'anything',
+      });
+    expect(res.status).toBe(403);
+    expect(res.body.error).toMatch(/invitation/i);
+  });
+
+  it('POST /api/auth/register: FAMILY with a wrong invite code -> 403', async () => {
+    process.env.FAMILY_INVITE_CODE = 'secret-code-123';
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        email: `fam2-${Date.now()}@shiftly.test`,
+        password: 'password123',
+        name: 'Fam2',
+        role: 'FAMILY',
+        inviteCode: 'wrong-code',
+      });
+    expect(res.status).toBe(403);
+  });
+
+  it('POST /api/auth/register: FAMILY with the matching invite code -> 201 FAMILY', async () => {
+    process.env.FAMILY_INVITE_CODE = 'secret-code-123';
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        email: `fam3-${Date.now()}@shiftly.test`,
+        password: 'password123',
+        name: 'Fam3',
+        role: 'FAMILY',
+        inviteCode: 'secret-code-123',
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.user.role).toBe('FAMILY');
+    expect(res.body.accessToken).toBeTruthy();
   });
 });
