@@ -1,17 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Navigate, NavLink, Outlet } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import api from '../api/client';
-
-interface TaskInstance {
-  id: string;
-  title: string;
-  description?: string;
-  priority: 'NORMAL' | 'URGENT';
-  completed: boolean;
-}
 
 // Protected route wrapper — redirects to /login if not authenticated
 export function ProtectedRoute() {
@@ -21,7 +11,9 @@ export function ProtectedRoute() {
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 }
 
-// Dashboard shell — sidebar + content area
+// Dashboard shell — sidebar + content area.
+// The page content (ShiftSummary, Tasks, etc.) renders via <Outlet />;
+// there is no separate home card — the index route IS the dashboard.
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const { dark, toggle } = useTheme();
@@ -62,7 +54,6 @@ export default function Dashboard() {
         </header>
 
         <div style={styles.content}>
-          <DashboardHome />
           <Outlet />
         </div>
       </main>
@@ -79,100 +70,6 @@ function SidebarLink({ to, label, dark }: { to: string; label: string; dark: boo
     >
       {label}
     </NavLink>
-  );
-}
-
-function DashboardHome() {
-  const { user } = useAuth();
-  const { dark } = useTheme();
-  const today = new Date().toISOString().split('T')[0];
-  const [stats, setStats] = useState<{ total: number; completed: number } | null>(null);
-  const [topTasks, setTopTasks] = useState<TaskInstance[]>([]);
-
-  useEffect(() => {
-    api.get(`/tasks?date=${today}`).then(({ data }) => {
-      const tasks = data as TaskInstance[];
-      const sorted = [...tasks].sort((a, b) => {
-        if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        if (a.priority !== b.priority) return a.priority === 'URGENT' ? -1 : 1;
-        return 0;
-      });
-      setStats({ total: tasks.length, completed: tasks.filter((t) => t.completed).length });
-      setTopTasks(sorted.slice(0, 5));
-    }).catch(() => {});
-  }, [today]);
-
-  const progressPct = stats ? Math.round((stats.completed / Math.max(stats.total, 1)) * 100) : 0;
-
-  return (
-    <div style={styles.homeCard(dark)}>
-      <h2 style={{ margin: '0 0 0.5rem', color: 'var(--text)' }}>Dashboard</h2>
-      <p style={{ color: 'var(--muted)', marginBottom: '1.5rem' }}>
-        {user?.role === 'FAMILY'
-          ? 'Add tasks and recurring schedules for your support workers.'
-          : 'Your shift task list will appear here when tasks are assigned.'}
-      </p>
-
-      {/* Stats row */}
-      <div style={styles.statsRow}>
-        <div style={styles.statCard(dark)}>
-          <div style={styles.statValue}>{stats?.total ?? '...'}</div>
-          <div style={styles.statLabel}>Today's Tasks</div>
-        </div>
-        <div style={styles.statCard(dark)}>
-          <div style={{ ...styles.statValue, color: 'var(--success)' }}>{stats?.completed ?? 0}</div>
-          <div style={styles.statLabel}>Completed</div>
-        </div>
-        <div style={styles.statCard(dark)}>
-          <div style={{ ...styles.statValue, color: 'var(--brand-text)' }}>{progressPct}%</div>
-          <div style={styles.statLabel}>Progress</div>
-        </div>
-      </div>
-
-      {/* Top 5 tasks */}
-      {topTasks.length > 0 && (
-        <div style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ margin: '0 0 0.75rem', fontSize: '1rem', color: 'var(--text-2)' }}>
-            Today's Tasks
-          </h3>
-          <div style={styles.taskList}>
-            {topTasks.map(task => (
-              <TodayTaskCard key={task.id} task={task} dark={dark} />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function TodayTaskCard({ task, dark }: { task: TaskInstance; dark: boolean }) {
-  const isUrgent = task.priority === 'URGENT';
-  return (
-    <div style={{
-      ...styles.todayTaskCard(dark),
-      ...(isUrgent && !task.completed ? styles.todayTaskUrgent : {}),
-      ...(task.completed ? styles.todayTaskCompleted : {}),
-    }}>
-      <div style={{
-        ...styles.taskCheckCircle,
-        background: task.completed ? 'var(--success-surface)' : (isUrgent ? 'var(--danger)' : 'var(--brand)'),
-      }}>
-        {task.completed ? '✓' : ''}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <span style={{
-          ...styles.todayTaskTitle,
-          color: task.completed ? 'var(--muted)' : 'var(--text)',
-          textDecoration: task.completed ? 'line-through' : 'none',
-        }}>
-          {task.title}
-        </span>
-      </div>
-      {isUrgent && !task.completed && (
-        <span style={styles.urgentBadge}>URGENT</span>
-      )}
-    </div>
   );
 }
 
@@ -257,83 +154,6 @@ const styles = {
   content: {
     flex: 1,
     padding: '2rem',
-  },
-  homeCard: (dark) => ({
-    background: 'var(--surface)',
-    borderRadius: '12px',
-    padding: '2rem',
-    boxShadow: '0 1px 4px var(--shadow-c)',
-  }),
-  statsRow: {
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '1rem',
-  },
-  statCard: (dark) => ({
-    flex: 1,
-    background: 'var(--surface-2)',
-    borderRadius: '8px',
-    padding: '1rem',
-    textAlign: 'center' as const,
-  }),
-  statValue: {
-    fontSize: '1.8rem',
-    fontWeight: 700,
-    color: 'var(--text)',
-    marginBottom: '0.25rem',
-  },
-  statLabel: {
-    fontSize: '0.8rem',
-    color: 'var(--muted)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.03em',
-  },
-  taskList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  todayTaskCard: (dark) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    padding: '0.75rem 1rem',
-    background: 'var(--surface-2)',
-    borderRadius: '8px',
-    borderLeft: '4px solid var(--brand)',
-  }),
-  todayTaskUrgent: {
-    borderLeftColor: 'var(--danger)',
-  },
-  todayTaskCompleted: {
-    opacity: 0.6,
-    borderLeftColor: 'var(--success)',
-  },
-  taskCheckCircle: {
-    width: '28px',
-    height: '28px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'var(--on-color)',
-    fontSize: '0.8rem',
-    fontWeight: 700,
-    flexShrink: 0,
-  },
-  todayTaskTitle: {
-    fontSize: '0.95rem',
-    fontWeight: 500,
-  },
-  urgentBadge: {
-    background: 'var(--danger)',
-    color: 'var(--on-color)',
-    padding: '0.15rem 0.5rem',
-    borderRadius: '4px',
-    fontSize: '0.7rem',
-    fontWeight: 700,
-    textTransform: 'uppercase' as const,
-    flexShrink: 0,
   },
   loading: {
     display: 'flex',
