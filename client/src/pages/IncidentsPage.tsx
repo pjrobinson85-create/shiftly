@@ -28,6 +28,7 @@ function getSocket() {
     socket = io(window.location.origin, {
       path: '/shiftly/socket.io',
       autoConnect: false,
+      auth: { token: localStorage.getItem('shiftly_token') ?? undefined },
     });
   }
   return socket;
