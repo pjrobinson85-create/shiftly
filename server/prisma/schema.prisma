@@ -132,6 +132,8 @@ model CareProfile {
   equipmentSettings String
   emergencyContacts String
   medicationSchedule String?
+  /// CONFIDENTIAL (family-only): respite/arrangements the worker should never see.
+  /// Strip in serializeCareProfile() for non-FAMILY — never query-expose raw.
   internalNotes     String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

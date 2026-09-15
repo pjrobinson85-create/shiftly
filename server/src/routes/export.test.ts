@@ -6,8 +6,21 @@ import prisma from '../lib/prisma';
 
 const dayStart = new Date();
 dayStart.setHours(0, 0, 0, 0);
-const fromStr = dayStart.toISOString().slice(0, 10);
-const toStr = new Date().toISOString().slice(0, 10);
+
+// M6: the export window must be "AEST today" regardless of what timezone the
+// host (or CI runner) runs in. toISOString() gives UTC dates, which drift
+// from the AEST calendar day between 14:00 UTC and 23:59 UTC — that's what
+// made this test flaky at 18:15 AEST.
+function aestDate(d: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Australia/Brisbane',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+}
+const fromStr = aestDate(dayStart);
+const toStr = aestDate(new Date());
 
 describe('Export routes (NDIS CSV)', () => {
   it('GET /api/export/incidents requires auth', async () => {
