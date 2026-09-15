@@ -23,12 +23,12 @@
   --muted: #4b5563;
   --faint: #5b6b7c;
 
-  /* brand */
-  --brand: #2563eb;
-  --brand-strong: #1d4ed8;
-  --brand-text: #2563eb;
-  --brand-soft: #eff6ff;
-  --brand-border: #bfdbfe;
+  /* brand (indigo) */
+  --brand: #4f46e5;
+  --brand-strong: #4338ca;
+  --brand-text: #4338ca;
+  --brand-soft: #eef2ff;
+  --brand-border: #c7d2fe;
 
   /* semantic */
   --success: #16a34a;
@@ -56,9 +56,9 @@
   /* danger border on soft-danger surfaces */
   --danger-border: #fca5a5;
 
-  /* effects */
-  --shadow-c: rgba(0, 0, 0, 0.06);
-  --shadow-lg: rgba(0, 0, 0, 0.1);
+  /* effects (tinted, not pure black) */
+  --shadow-c: rgba(15, 23, 42, 0.07);
+  --shadow-lg: rgba(15, 23, 42, 0.14);
   --backdrop: rgba(15, 23, 42, 0.4);
 }
 
@@ -79,11 +79,11 @@
   --muted: #94a3b8;
   --faint: #7c8da6;
 
-  --brand: #2563eb;
-  --brand-strong: #60a5fa;
-  --brand-text: #60a5fa;
-  --brand-soft: rgba(59, 130, 246, 0.14);
-  --brand-border: #1e3a5f;
+  --brand: #4f46e5;
+  --brand-strong: #818cf8;
+  --brand-text: #a5b4fc;
+  --brand-soft: rgba(99, 102, 241, 0.14);
+  --brand-border: rgba(99, 102, 241, 0.3);
 
   --success: #22c55e;
   --success-strong: #4ade80;
@@ -122,6 +122,9 @@ html {
 
 body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   background: var(--bg);
   color: var(--text);
@@ -190,8 +193,12 @@ a:hover {
 .shiftly-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 1px 3px var(--shadow-c);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px var(--shadow-c), 0 4px 16px var(--shadow-c);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.shiftly-card:hover {
+  box-shadow: 0 2px 6px var(--shadow-c), 0 8px 24px var(--shadow-c);
 }
 
 @keyframes shiftly-pulse {
