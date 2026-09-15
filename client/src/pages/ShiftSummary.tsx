@@ -57,8 +57,17 @@ interface ShiftData {
   shiftSession: ShiftSession;
 }
 
+// M5: shift keys are AEST calendar dates. Must match the server's key
+// (new Date().toISOString() gives UTC and drifts for AEST 00:00–09:59).
+const aestDateFmt = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Australia/Brisbane',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
 function isoDate(d: Date): string {
-  return d.toISOString().split('T')[0];
+  return aestDateFmt.format(d);
 }
 
 function formatTime(iso: string): string {

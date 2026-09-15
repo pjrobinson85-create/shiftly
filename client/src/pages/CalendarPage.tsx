@@ -21,8 +21,17 @@ function formatDateHeading(iso: string): string {
   });
 }
 
+// M5: AEST calendar dates (matches the server's shift key; UTC drifts for
+// AEST 00:00–09:59).
+const aestDateFmt = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Australia/Brisbane',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
 function isoDate(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return aestDateFmt.format(date);
 }
 
 function addDays(date: Date, n: number): Date {

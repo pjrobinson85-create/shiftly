@@ -101,7 +101,8 @@ model TaskInstance {
 // Shift notes (handover between shifts)
 model ShiftSession {
   id             String   @id @default(uuid())
-  shiftDate      DateTime @unique
+  /// AEST calendar date "YYYY-MM-DD" (one row per shift-day; M5).
+  shiftDate      String   @unique
   checkedInAt    DateTime?
   checkedOutAt   DateTime?
   createdAt      DateTime @default(now())
@@ -118,7 +119,8 @@ model ShiftNote {
   id          String   @id @default(uuid())
   content     String
   photos      Json     // array of photo URLs/paths
-  shiftDate   DateTime // which shift this note belongs to
+  /// AEST calendar date "YYYY-MM-DD" of the shift this note belongs to (M5).
+  shiftDate   String
   createdAt   DateTime @default(now())
 
   userId      String

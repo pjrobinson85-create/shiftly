@@ -14,19 +14,34 @@ const router = Router();
 
 router.use(requireAuth);
 
-function parseDate(dateStr: string): [Date, Date] {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return [
-    new Date(year, month - 1, day, 0, 0, 0),
-    new Date(year, month - 1, day, 23, 59, 59),
-  ];
+// M5: shift keys are AEST calendar dates "YYYY-MM-DD" (the app's timezone,
+// pinned in vitest.config.ts / the systemd unit). Stored as TEXT so one
+// shift-day = one row, unambiguously, regardless of host/DB timezone.
+const aestDateFmt = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Australia/Brisbane',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+function parseDateKey(dateStr: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    throw Object.assign(new Error('Invalid date, expected YYYY-MM-DD'), { status: 400 });
+  }
+  return dateStr;
 }
 
-async function getOrCreateShiftSession(date: Date) {
+// M5: AEST window for one shift-day: [dateKey 00:00 +10:00, next day 00:00 +10:00).
+function aestWindow(dateKey: string): [Date, Date] {
+  const start = new Date(`${dateKey}T00:00:00+10:00`);
+  return [start, new Date(start.getTime() + 24 * 3600 * 1000)];
+}
+
+async function getOrCreateShiftSession(dateKey: string) {
   return prisma.shiftSession.upsert({
-    where: { shiftDate: date },
+    where: { shiftDate: dateKey },
     update: {},
-    create: { shiftDate: date },
+    create: { shiftDate: dateKey },
     include: {
       checkedInBy: { select: { id: true, name: true, role: true } },
       checkedOutBy: { select: { id: true, name: true, role: true } },
@@ -52,11 +67,12 @@ function toShiftSessionSummary(session: Awaited<ReturnType<typeof getOrCreateShi
 // GET /api/shifts/:date — full shift summary for a date
 router.get('/:date', async (req: AuthRequest, res) => {
   try {
-    const [startOfDay, endOfDay] = parseDate(req.params.date as string);
+    const dateKey = parseDateKey(req.params.date as string);
+    const [startOfDay, endOfDay] = aestWindow(dateKey);
 
     const [tasks, calendarEvents, shiftNotes, shiftSession] = await Promise.all([
       prisma.taskInstance.findMany({
-        where: { dueDate: { gte: startOfDay, lte: endOfDay } },
+        where: { dueDate: { gte: startOfDay, lt: endOfDay } },
         include: {
           createdBy: { select: { id: true, name: true, role: true } },
           completedBy: { select: { id: true, name: true, role: true } },
@@ -64,15 +80,15 @@ router.get('/:date', async (req: AuthRequest, res) => {
         orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }],
       }),
       prisma.calendarEvent.findMany({
-        where: { startTime: { gte: startOfDay, lte: endOfDay } },
+        where: { startTime: { gte: startOfDay, lt: endOfDay } },
         orderBy: { startTime: 'asc' },
       }),
       prisma.shiftNote.findMany({
-        where: { shiftDate: { gte: startOfDay, lte: endOfDay } },
+        where: { shiftDate: dateKey },
         include: { user: { select: { id: true, name: true, role: true } } },
         orderBy: { createdAt: 'desc' },
       }),
-      getOrCreateShiftSession(startOfDay),
+      getOrCreateShiftSession(dateKey),
     ]);
 
     res.json({
@@ -96,8 +112,8 @@ router.get('/:date', async (req: AuthRequest, res) => {
 // POST /api/shifts/:date/check-in — worker starts the shift
 router.post('/:date/check-in', requireRole('WORKER'), async (req: AuthRequest, res) => {
   try {
-    const [startOfDay] = parseDate(req.params.date as string);
-    const existing = await getOrCreateShiftSession(startOfDay);
+    const dateKey = parseDateKey(req.params.date as string);
+    const existing = await getOrCreateShiftSession(dateKey);
 
     if (!canCheckIn({ checkedInAt: existing.checkedInAt, checkedOutAt: existing.checkedOutAt })) {
       return res.status(409).json({ error: 'Shift has already been checked in' });
@@ -127,8 +143,8 @@ router.post('/:date/check-in', requireRole('WORKER'), async (req: AuthRequest, r
 // POST /api/shifts/:date/check-out — worker ends the shift and leaves a handover note
 router.post('/:date/check-out', requireRole('WORKER'), async (req: AuthRequest, res) => {
   try {
-    const [startOfDay] = parseDate(req.params.date as string);
-    const existing = await getOrCreateShiftSession(startOfDay);
+    const dateKey = parseDateKey(req.params.date as string);
+    const existing = await getOrCreateShiftSession(dateKey);
 
     if (!canCheckOut({ checkedInAt: existing.checkedInAt, checkedOutAt: existing.checkedOutAt })) {
       return res.status(409).json({ error: 'Shift must be checked in before checkout' });
@@ -146,7 +162,7 @@ router.post('/:date/check-out', requireRole('WORKER'), async (req: AuthRequest, 
         data: {
           content,
           photos,
-          shiftDate: startOfDay,
+          shiftDate: dateKey,
           userId: req.user!.id,
         },
         include: { user: { select: { id: true, name: true, role: true } } },
@@ -180,7 +196,7 @@ router.post('/:date/check-out', requireRole('WORKER'), async (req: AuthRequest, 
 // POST /api/shifts/:date/notes — add a shift note outside checkout
 router.post('/:date/notes', async (req: AuthRequest, res) => {
   try {
-    const [startOfDay] = parseDate(req.params.date as string);
+    const dateKey = parseDateKey(req.params.date as string);
     const content = validateCheckoutNote((req.body as { content?: string }).content);
     const photos = normalizeShiftPhotos((req.body as { photos?: unknown }).photos);
 
@@ -191,7 +207,7 @@ router.post('/:date/notes', async (req: AuthRequest, res) => {
     const note = await prisma.shiftNote.create({
       data: {
         content,
-        shiftDate: startOfDay,
+        shiftDate: dateKey,
         photos,
         userId: req.user!.id,
       },
