@@ -307,6 +307,69 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// POST /api/auth/change-password — any authenticated user can change their own
+// password. Verifies the current password, enforces the same minimum length as
+// registration, and requires a new value that differs from the old one. On
+// success the refresh token is rotated so any other device/session is signed
+// out; the caller receives a fresh access token.
+router.post('/change-password', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body as {
+      currentPassword?: string;
+      newPassword?: string;
+    };
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current and new passwords are required' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters' });
+    }
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ error: 'New password must be different from the current one' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({ where: { id: user.id }, data: { password: hashed } });
+
+    // Rotate the refresh token: signing out everywhere else is the safe
+    // default when credentials change.
+    const { accessToken, refreshToken, hashedToken } = createTokens(user);
+    await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+    await prisma.refreshToken.create({
+      data: { token: hashedToken, userId: user.id, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+    });
+    setRefreshCookie(res, refreshToken);
+
+    res.json({
+      message: 'Password updated',
+      accessToken,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        isAdmin: user.isAdmin,
+        canEditCarePlan: user.canEditCarePlan,
+      },
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST /api/auth/test-briefing — FAMILY-only: send the pre-shift briefing now
 // (for the given AEST date, default today) so we can verify email delivery
 // without waiting for the daily 07:00 schedule. Does NOT bump the

@@ -28,11 +28,15 @@ npm run dev
 
 ### Database
 
-Shiftly uses **SQLite for local development** (zero setup, just works). The Prisma schema is configured with `provider = "sqlite"` and `url = "file:./dev.db"`.
+Shiftly uses **SQLite for local development** (zero setup, just works). The Prisma schema uses `provider = "sqlite"` and reads its location from `DATABASE_URL` in `server/.env` (an **absolute** `file:` path, e.g. `file:/home/paul/projects/shiftly/server/prisma/dev.db`).
+
+> **Why absolute:** a relative `file:./dev.db` is baked into the generated client and resolves against `node_modules/.prisma/client/`, so test runs and the live server can silently end up on *different* databases. The absolute `DATABASE_URL` makes that failure mode impossible and lets the vitest global setup point tests at a throwaway `/tmp` DB.
+
+Tests never touch the live DB: `vitest`'s global setup (`server/src/test/global-setup.ts`) migrates and seeds a fresh `dev.db` in `/tmp/shiftly-vitest/` before each run and deletes it after.
 
 To use PostgreSQL (recommended for production):
 1. Edit `server/prisma/schema.prisma` → change `provider = "postgresql"`
-2. Set `DATABASE_URL` in `.env`
+2. Set `DATABASE_URL` in `server/.env` to your Postgres connection string
 3. Run `npx prisma migrate dev`
 
 ### Project Structure

@@ -82,6 +82,110 @@ describe('Auth routes', () => {
   });
 });
 
+describe('Change password', () => {
+  it('POST /api/auth/change-password rejects without a token', async () => {
+    const res = await request(app)
+      .post('/api/auth/change-password')
+      .send({ currentPassword: 'password123', newPassword: 'newpassword999' });
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/auth/change-password rejects a wrong current password', async () => {
+    const token = await familyToken();
+    const res = await request(app)
+      .post('/api/auth/change-password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'nope', newPassword: 'newpassword999' });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toMatch(/current password/i);
+  });
+
+  it('POST /api/auth/change-password rejects a too-short new password', async () => {
+    const token = await familyToken();
+    const res = await request(app)
+      .post('/api/auth/change-password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'password123', newPassword: 'short' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/8 characters/i);
+  });
+
+  it('POST /api/auth/change-password rejects a new password identical to the current one', async () => {
+    const token = await familyToken();
+    const res = await request(app)
+      .post('/api/auth/change-password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'password123', newPassword: 'password123' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/different/i);
+  });
+
+  it('POST /api/auth/change-password updates the password and lets you log in with it', async () => {
+    // Use a throwaway account so the seeded 'family' password is untouched.
+    const username = `pwchg${Date.now()}`;
+    const reg = await request(app)
+      .post('/api/auth/register')
+      .send({ username, password: 'password123', name: 'Pw Chg' });
+    const token = reg.body.accessToken;
+
+    const change = await request(app)
+      .post('/api/auth/change-password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'password123', newPassword: 'brand-new-42' });
+    expect(change.status).toBe(200);
+    expect(change.body.message).toMatch(/password updated/i);
+    expect(change.body.accessToken).toBeTruthy();
+
+    // Old password no longer works...
+    const old = await request(app)
+      .post('/api/auth/login')
+      .send({ username, password: 'password123' });
+    expect(old.status).toBe(401);
+
+    // ...but the new one does.
+    const fresh = await request(app)
+      .post('/api/auth/login')
+      .send({ username, password: 'brand-new-42' });
+    expect(fresh.status).toBe(200);
+    expect(fresh.body.accessToken).toBeTruthy();
+  });
+
+  it('POST /api/auth/change-password rotates the refresh token (old one rejected)', async () => {
+    const username = `pwrot${Date.now()}`;
+    const reg = await request(app)
+      .post('/api/auth/register')
+      .send({ username, password: 'password123', name: 'Pw Rot' });
+
+    // Grab the refresh token cookie set by register.
+    const refreshCookie = reg.headers['set-cookie']
+      .find((c: string) => c.startsWith('refreshToken='));
+    expect(refreshCookie).toBeTruthy();
+
+    const change = await request(app)
+      .post('/api/auth/change-password')
+      .set('Authorization', `Bearer ${reg.body.accessToken}`)
+      .set('Cookie', [refreshCookie])
+      .send({ currentPassword: 'password123', newPassword: 'brand-new-42' });
+    expect(change.status).toBe(200);
+
+    // The *old* refresh token should now be invalid.
+    const staleRefresh = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', [refreshCookie]);
+    expect(staleRefresh.status).toBe(401);
+
+    // The *new* refresh token (set by change-password) should work.
+    const newRefreshCookie = change.headers['set-cookie'].find(
+      (c: string) => c.startsWith('refreshToken=')
+    );
+    const freshRefresh = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', [newRefreshCookie]);
+    expect(freshRefresh.status).toBe(200);
+    expect(freshRefresh.body.accessToken).toBeTruthy();
+  });
+});
+
 describe('Registration role gate', () => {
   const original = process.env.FAMILY_INVITE_CODE;
 

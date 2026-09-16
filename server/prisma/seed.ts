@@ -1,6 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
+// The generated client honours DATABASE_URL (env-driven in schema.prisma).
+// `prisma db seed` runs tsx, which loads .env for us in dev; tests set it
+// in the vitest global setup so seeding always targets the scratch DB.
 const prisma = new PrismaClient();
 
 async function main() {

@@ -7,7 +7,11 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  // Absolute path, supplied via DATABASE_URL (.env for prod, vitest env for
+  // tests). A relative file: path is baked into the generated client and
+  // silently resolves against node_modules/.prisma/client/ — which once
+  // caused test runs and the live server to hit different databases.
+  url      = env("DATABASE_URL")
 }
 
 enum UserRole {

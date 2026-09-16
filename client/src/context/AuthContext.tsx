@@ -18,6 +18,10 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
+  // Exposed so pages (e.g. Account / change-password) can swap in a fresh
+  // access token after the server rotates it.
+  setToken: (token: string | null) => void;
+  setUser: (user: User | null) => void;
 }
 
 interface RegisterData {
@@ -87,7 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, token, loading, login, register, logout, setToken, setUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

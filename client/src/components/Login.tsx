@@ -96,6 +96,8 @@ export default function LoginPage() {
               required
               style={styles.input}
               placeholder={mode === 'register' ? 'e.g. sarah' : 'Your name'}
+              autoCapitalize="none"
+              autoComplete="username"
             />
             {mode === 'register' && (
               <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
@@ -113,6 +115,7 @@ export default function LoginPage() {
               required
               style={styles.input}
               placeholder="••••••••"
+              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
             />
           </label>
 
@@ -126,6 +129,7 @@ export default function LoginPage() {
                 required
                 style={styles.input}
                 placeholder="••••••••"
+                autoComplete="new-password"
               />
             </label>
           )}

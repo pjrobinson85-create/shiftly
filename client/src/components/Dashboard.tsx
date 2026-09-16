@@ -38,6 +38,7 @@ export default function Dashboard() {
           {user?.isAdmin && (
             <SidebarLink to="/admin" label="Admin" dark={dark} />
           )}
+          <SidebarLink to="/account" label="Account" dark={dark} />
         </nav>
       </aside>
 
