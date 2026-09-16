@@ -16,7 +16,7 @@ function clientRooms(clientId: string): Set<string> {
 }
 
 function makeToken(role: 'FAMILY' | 'WORKER', id = 'test-user') {
-  return jwt.sign({ id, email: `${role.toLowerCase()}@shiftly.test`, role }, JWT_SECRET, {
+  return jwt.sign({ id, username: role.toLowerCase(), role }, JWT_SECRET, {
     expiresIn: '6h',
   });
 }

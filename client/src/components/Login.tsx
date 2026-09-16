@@ -6,9 +6,11 @@ export default function LoginPage() {
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [role, setRole] = useState<'FAMILY' | 'WORKER'>('WORKER');
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
@@ -21,14 +23,20 @@ export default function LoginPage() {
 
     try {
       if (mode === 'login') {
-        await login(email, password);
+        await login(username, password);
         navigate('/');
       } else {
+        if (password !== confirmPassword) {
+          setError('Passwords do not match');
+          return;
+        }
         await register({
-          email,
+          username,
           password,
+          confirmPassword,
           name,
           role,
+          email: email || undefined,
           inviteCode: inviteCode || undefined,
         });
         navigate('/');
@@ -67,7 +75,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} style={styles.form}>
           {mode === 'register' && (
             <label style={styles.label}>
-              Name
+              Full name
               <input
                 type="text"
                 value={name}
@@ -80,15 +88,20 @@ export default function LoginPage() {
           )}
 
           <label style={styles.label}>
-            Email
+            {mode === 'register' ? 'Username' : 'Name'}
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
               style={styles.input}
-              placeholder="you@example.com"
+              placeholder={mode === 'register' ? 'e.g. sarah' : 'Your name'}
             />
+            {mode === 'register' && (
+              <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+                A short name you'll use to sign in — lowercase, no spaces
+              </span>
+            )}
           </label>
 
           <label style={styles.label}>
@@ -105,33 +118,70 @@ export default function LoginPage() {
 
           {mode === 'register' && (
             <label style={styles.label}>
-              Role
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as 'FAMILY' | 'WORKER')}
+              Confirm password
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
                 style={styles.input}
-              >
-                <option value="WORKER">Support Worker</option>
-                <option value="FAMILY">Family Member</option>
-              </select>
+                placeholder="••••••••"
+              />
             </label>
           )}
 
-          {mode === 'register' && role === 'FAMILY' && (
-            <label style={styles.label}>
-              Family invitation code
-              <input
-                type="password"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value)}
-                required
-                style={styles.input}
-                placeholder="Code provided by the family"
-              />
-              <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
-                Invites are required for family access
-              </span>
-            </label>
+          {mode === 'register' && (
+            <>
+              <label style={styles.label}>
+                Role
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as 'FAMILY' | 'WORKER')}
+                  style={styles.input}
+                >
+                  <option value="WORKER">Support Worker</option>
+                  <option value="FAMILY">Family Member</option>
+                </select>
+              </label>
+
+              <label style={styles.label}>
+                {role === 'WORKER' ? 'Email' : 'Email (optional)'}
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required={role === 'WORKER'}
+                  style={styles.input}
+                  placeholder={
+                    role === 'WORKER' ? 'you@example.com' : 'Only if you want to share it'
+                  }
+                />
+                {role === 'WORKER' && (
+                  <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+                    You'll get a pre-shift briefing email every morning with anything
+                    pertinent for the next day's shift — notes, open tasks, incidents and
+                    updated care details.
+                  </span>
+                )}
+              </label>
+
+              {role === 'FAMILY' && (
+                <label style={styles.label}>
+                  Family invitation code
+                  <input
+                    type="password"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    required
+                    style={styles.input}
+                    placeholder="Code provided by the family"
+                  />
+                  <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+                    Invites are required for family access
+                  </span>
+                </label>
+              )}
+            </>
           )}
 
           <button type="submit" disabled={busy} style={styles.button}>

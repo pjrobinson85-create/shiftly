@@ -7,6 +7,7 @@ interface ShoppingItem {
   name: string;
   quantity?: string;
   completed: boolean;
+  addedBy?: { id: string; name: string; role: string } | null;
 }
 
 interface ShoppingList {
@@ -300,6 +301,11 @@ export default function ShoppingListPage() {
                         <span style={styles.itemQty}> × {item.quantity}</span>
                       )}
                     </span>
+                    {item.addedBy && (
+                      <span style={{ ...styles.itemAddedBy, opacity: 0.65 }}>
+                        added by {item.addedBy.name}
+                      </span>
+                    )}
                     <button
                       style={styles.removeBtn}
                       onClick={() => deleteItem(activeList.id, item.id)}

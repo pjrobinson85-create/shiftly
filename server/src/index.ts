@@ -21,6 +21,7 @@ import exportRoutes from './routes/export';
 import userRoutes from './routes/users';
 import careProfileRoutes from './routes/care-profile';
 import { initSocket } from './lib/socket';
+import { startBriefingScheduler } from './lib/briefing-scheduler';
 
 const app = express();
 const httpServer = createServer(app);
@@ -98,4 +99,5 @@ if (require.main === module) {
   httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
+  startBriefingScheduler(); // daily pre-shift briefing emails for workers
 }

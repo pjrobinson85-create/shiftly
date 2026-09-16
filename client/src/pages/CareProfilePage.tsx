@@ -68,6 +68,8 @@ function splitParagraphs(value: string) {
 export default function CareProfilePage() {
   const { user } = useAuth();
   const isFamily = user?.role === 'FAMILY';
+  // Care-plan editing: admin, or explicitly granted (via admin panel).
+  const canEdit = Boolean(user?.isAdmin || user?.canEditCarePlan);
   const [profile, setProfile] = useState<CareProfile | null>(null);
   const [form, setForm] = useState<CareProfileForm>(emptyForm);
   const [loading, setLoading] = useState(true);
@@ -92,7 +94,12 @@ export default function CareProfilePage() {
       if (err?.response?.status === 404) {
         setProfile(null);
         setForm(emptyForm);
-        setEditing(isFamily);
+        setEditing(canEdit);
+      } else if (err?.response?.status === 403) {
+        // Read-only for this user
+        setProfile(null);
+        setForm(emptyForm);
+        setEditing(false);
       } else {
         setError('Failed to load care profile.');
       }
@@ -148,7 +155,7 @@ export default function CareProfilePage() {
             Key reference details for workers and family members.
           </p>
         </div>
-        {isFamily && (
+        {canEdit && (
           <button
             type="button"
             style={styles.primaryBtn}
@@ -173,7 +180,7 @@ export default function CareProfilePage() {
         </div>
       )}
 
-      {editing && isFamily ? (
+      {editing && canEdit ? (
         <form onSubmit={saveProfile} style={styles.formCard}>
           <ProfileField
             label="Medical info"
@@ -205,12 +212,14 @@ export default function CareProfilePage() {
             onChange={value => setForm(prev => ({ ...prev, medicationSchedule: value }))}
             placeholder="Optional high-level medication timing guidance..."
           />
-          <ProfileField
-            label="Internal family-only notes"
-            value={form.internalNotes}
-            onChange={value => setForm(prev => ({ ...prev, internalNotes: value }))}
-            placeholder="Visible only to family members..."
-          />
+          {isFamily && (
+            <ProfileField
+              label="Internal family-only notes"
+              value={form.internalNotes}
+              onChange={value => setForm(prev => ({ ...prev, internalNotes: value }))}
+              placeholder="Visible only to family members..."
+            />
+          )}
 
           <div style={styles.formActions}>
             <button type="submit" style={styles.primaryBtn} disabled={saving}>

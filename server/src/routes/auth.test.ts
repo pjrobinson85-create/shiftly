@@ -13,7 +13,7 @@ describe('Auth routes', () => {
   it('POST /api/auth/login succeeds for a seeded user', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'family@shiftly.test', password: 'password123' });
+      .send({ username: 'family', password: 'password123' });
     expect(res.status).toBe(200);
     expect(res.body.accessToken).toBeTruthy();
     expect(res.body.user.role).toBe('FAMILY');
@@ -22,32 +22,49 @@ describe('Auth routes', () => {
   it('POST /api/auth/login rejects a bad password', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'family@shiftly.test', password: 'wrong-password' });
+      .send({ username: 'family', password: 'wrong-password' });
     expect(res.status).toBe(401);
     expect(res.body.error).toMatch(/invalid/i);
   });
 
-  it('POST /api/auth/login requires email and password', async () => {
-    const res = await request(app).post('/api/auth/login').send({ email: 'x' });
+  it('POST /api/auth/login requires name and password', async () => {
+    const res = await request(app).post('/api/auth/login').send({ username: 'x' });
     expect(res.status).toBe(400);
+  });
+
+  it('POST /api/auth/login is case-insensitive on the username', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'Family', password: 'password123' });
+    expect(res.status).toBe(200);
   });
 
   it('POST /api/auth/register enforces min password length', async () => {
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ email: `new-${Date.now()}@shiftly.test`, password: 'short', name: 'New Person' });
+      .send({ username: `newperson${Date.now()}`, password: 'short', name: 'New Person' });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/8 characters/i);
   });
 
   it('POST /api/auth/register creates a worker by default', async () => {
-    const email = `reg-${Date.now()}@shiftly.test`;
+    const username = `regworker${Date.now()}`;
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ email, password: 'password123', name: 'Test Worker' });
+      .send({ username, password: 'password123', name: 'Test Worker' });
     expect(res.status).toBe(201);
     expect(res.body.user.role).toBe('WORKER');
+    expect(res.body.user.username).toBe(username);
     expect(res.body.accessToken).toBeTruthy();
+  });
+
+  it('POST /api/auth/register allows an account without an email', async () => {
+    const username = `noemail${Date.now()}`;
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ username, password: 'password123', name: 'No Email' });
+    expect(res.status).toBe(201);
+    expect(res.body.user.email).toBeNull();
   });
 
   it('GET /api/auth/me returns the caller with a valid token', async () => {
@@ -56,7 +73,7 @@ describe('Auth routes', () => {
       .get('/api/auth/me')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
-    expect(res.body.email).toBe('family@shiftly.test');
+    expect(res.body.username).toBe('family');
   });
 
   it('GET /api/auth/me returns 401 without a token', async () => {
@@ -78,7 +95,7 @@ describe('Registration role gate', () => {
     const res = await request(app)
       .post('/api/auth/register')
       .send({
-        email: `fam-${Date.now()}@shiftly.test`,
+        username: `fam${Date.now()}`,
         password: 'password123',
         name: 'Fam',
         role: 'FAMILY',
@@ -93,7 +110,7 @@ describe('Registration role gate', () => {
     const res = await request(app)
       .post('/api/auth/register')
       .send({
-        email: `fam2-${Date.now()}@shiftly.test`,
+        username: `fam2${Date.now()}`,
         password: 'password123',
         name: 'Fam2',
         role: 'FAMILY',
@@ -107,7 +124,7 @@ describe('Registration role gate', () => {
     const res = await request(app)
       .post('/api/auth/register')
       .send({
-        email: `fam3-${Date.now()}@shiftly.test`,
+        username: `fam3${Date.now()}`,
         password: 'password123',
         name: 'Fam3',
         role: 'FAMILY',

@@ -10,6 +10,7 @@ import CalendarPage from './pages/CalendarPage';
 import ShiftSummary from './pages/ShiftSummary';
 import CareProfilePage from './pages/CareProfilePage';
 import IncidentsPage from './pages/IncidentsPage';
+import AdminPage from './pages/AdminPage';
 import { useAuth } from './context/AuthContext';
 
 // FAMILY-only guard — redirects workers away from family pages
@@ -49,6 +50,10 @@ function App() {
                     <CalendarPage />
                   </FamilyRoute>
                 }
+              />
+              <Route
+                path="admin"
+                element={<AdminPage />}
               />
             </Route>
           </Route>

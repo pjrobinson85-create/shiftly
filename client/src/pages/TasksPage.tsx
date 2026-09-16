@@ -220,15 +220,13 @@ export default function TasksPage() {
       {/* Header row */}
       <div style={styles.headerRow()}>
         <h2 style={styles.pageTitle(dark)}>Tasks</h2>
-        {user?.role === 'FAMILY' && (
-          <button style={styles.addBtn()} onClick={() => setShowAddForm(!showAddForm)}>
-            {showAddForm ? '✕ Cancel' : '+ Add Task'}
-          </button>
-        )}
+        <button style={styles.addBtn()} onClick={() => setShowAddForm(!showAddForm)}>
+          {showAddForm ? '✕ Cancel' : '+ Add Task'}
+        </button>
       </div>
 
-      {/* Add task form */}
-      {showAddForm && user?.role === 'FAMILY' && (
+      {/* Add task form — open to all roles; the server records who created it */}
+      {showAddForm && (
         <form onSubmit={addTask} style={styles.addForm(dark)}>
           <input
             style={styles.input(dark)}

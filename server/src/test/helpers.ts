@@ -3,22 +3,23 @@ import { app } from '../index';
 
 /**
  * Log in as a seeded user and return a Bearer token.
+ * Login is by username (email is optional contact info only).
  * Seed users (see prisma/seed.ts):
- *   family@shiftly.test / password123 (FAMILY)
- *   worker@shiftly.test / password123 (WORKER)
+ *   family / password123 (FAMILY)
+ *   sarah  / password123 (WORKER)
  */
-export async function login(email: string, password = 'password123'): Promise<string> {
-  const res = await request(app).post('/api/auth/login').send({ email, password });
+export async function login(username: string, password = 'password123'): Promise<string> {
+  const res = await request(app).post('/api/auth/login').send({ username, password });
   if (res.status !== 200) {
-    throw new Error(`Login failed for ${email}: ${res.status} ${res.body.error}`);
+    throw new Error(`Login failed for ${username}: ${res.status} ${res.body.error}`);
   }
   return res.body.accessToken as string;
 }
 
 export async function familyToken(): Promise<string> {
-  return login('family@shiftly.test');
+  return login('family');
 }
 
 export async function workerToken(): Promise<string> {
-  return login('worker@shiftly.test');
+  return login('sarah');
 }

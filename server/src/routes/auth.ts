@@ -4,12 +4,14 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import prisma from '../lib/prisma';
 import { JWT_SECRET, REFRESH_TOKEN_SECRET, JWT_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN } from '../lib/config';
+import { aestDate, sendBriefingForDate } from '../lib/briefing';
+import { requireAuth, requireRole, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-function createTokens(user: { id: string; email: string; role: string }) {
+function createTokens(user: { id: string; username: string | null; role: string }) {
   const accessToken = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
+    { id: user.id, username: user.username, role: user.role },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
@@ -40,24 +42,56 @@ function clearRefreshCookie(res: Response) {
   });
 }
 
+// Normalize a user-supplied username: trim, lowercase, collapse spaces to '-'
+function normalizeUsername(raw: string): string {
+  return raw.trim().toLowerCase().replace(/\s+/g, '-');
+}
+
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, role, phone, inviteCode } = req.body as {
-      email: string;
-      password: string;
-      name: string;
-      role?: 'FAMILY' | 'WORKER';
-      phone?: string;
-      inviteCode?: string;
-    };
+    const { username, email, password, confirmPassword, name, role, phone, inviteCode } =
+      req.body as {
+        username?: string;
+        email?: string;
+        password: string;
+        confirmPassword?: string;
+        name: string;
+        role?: 'FAMILY' | 'WORKER';
+        phone?: string;
+        inviteCode?: string;
+      };
 
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: 'Email, password, and name are required' });
+    if (!password || !name) {
+      return res.status(400).json({ error: 'Password and name are required' });
+    }
+
+    // Confirm-password check. The signup form always sends confirmPassword
+    // (and the client rejects mismatches before submitting); the server
+    // re-validates it when present so the match can't be bypassed via a
+    // direct API call.
+    if (typeof confirmPassword === 'string' && password !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
     }
 
     if (password.length < 8) {
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    // Username is the login key — short, unique, optional at registration:
+    // if omitted we derive one from the name (lowercase, letters+numbers only).
+    let finalUsername = username ? normalizeUsername(username) : '';
+    if (!finalUsername) {
+      finalUsername = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '')
+        .slice(0, 16);
+    }
+    if (!finalUsername || finalUsername.length < 2) {
+      return res.status(400).json({ error: 'Please choose a short name (at least 2 characters)' });
+    }
+    if (!/^[a-z0-9-]+$/.test(finalUsername)) {
+      return res.status(400).json({ error: 'Name may only contain letters, numbers and dashes' });
     }
 
     // Registration is open for workers, but FAMILY is a privileged role
@@ -89,21 +123,33 @@ router.post('/register', async (req, res) => {
       finalRole = 'FAMILY';
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await prisma.user.findUnique({ where: { username: finalUsername } });
     if (existing) {
-      return res.status(400).json({ error: 'Email already registered' });
+      return res.status(400).json({ error: 'That name is already taken — pick another' });
+    }
+
+    // Email is optional contact info only — never used for login.
+    // Not unique (some users may share/omit), but we avoid accidental
+    // duplicate contact info when a distinct person tries the same address.
+    const finalEmail = email && email.trim() ? email.trim().toLowerCase() : null;
+    if (finalEmail) {
+      const emailTaken = await prisma.user.findFirst({ where: { email: finalEmail } });
+      if (emailTaken) {
+        return res.status(400).json({ error: 'That email is already in use' });
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
       data: {
-        email,
+        username: finalUsername,
+        email: finalEmail,
         password: hashedPassword,
         name,
         role: finalRole,
         phone,
       },
-      select: { id: true, email: true, name: true, role: true, phone: true },
+      select: { id: true, username: true, email: true, name: true, role: true, phone: true },
     });
 
     const { accessToken, refreshToken, hashedToken } = createTokens(user);
@@ -116,7 +162,7 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       accessToken,
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      user: { id: user.id, username: user.username, email: user.email, name: user.name, role: user.role },
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -127,20 +173,20 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body as { email: string; password: string };
+    const { username, password } = req.body as { username?: string; password: string };
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Name and password are required' });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { username: normalizeUsername(username) } });
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid name or password' });
     }
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid name or password' });
     }
 
     const { accessToken, refreshToken, hashedToken } = createTokens(user);
@@ -155,7 +201,15 @@ router.post('/login', async (req, res) => {
 
     res.json({
       accessToken,
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        isAdmin: user.isAdmin,
+        canEditCarePlan: user.canEditCarePlan,
+      },
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -230,7 +284,16 @@ router.get('/me', async (req, res) => {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, email: true, name: true, role: true, phone: true },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        name: true,
+        role: true,
+        phone: true,
+        isAdmin: true,
+        canEditCarePlan: true,
+      },
     });
 
     if (!user) {
@@ -241,6 +304,46 @@ router.get('/me', async (req, res) => {
   } catch (error) {
     console.error('Auth me error:', error);
     res.status(401).json({ error: 'Invalid or expired token' });
+  }
+});
+
+// POST /api/auth/test-briefing — FAMILY-only: send the pre-shift briefing now
+// (for the given AEST date, default today) so we can verify email delivery
+// without waiting for the daily 07:00 schedule. Does NOT bump the
+// lastBriefingSentAt stamp, so the real morning send still goes out.
+router.post('/test-briefing', requireAuth, requireRole('FAMILY'), async (req: AuthRequest, res) => {
+  try {
+    const date =
+      typeof (req.body as { date?: string })?.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test((req.body as { date?: string }).date!)
+        ? (req.body as { date: string }).date
+        : aestDate();
+
+    // Send without stamping lastBriefingSentAt: we don't want a manual
+    // test to suppress the real daily briefing.
+    const workers = await prisma.user.findMany({
+      where: { role: 'WORKER' },
+      select: { id: true, email: true, lastBriefingSentAt: true },
+    });
+    const { buildBriefing, briefingHtml } = await import('../lib/briefing');
+    const { sendMail } = await import('../lib/email');
+    let sent = 0;
+    for (const w of workers) {
+      if (!w.email) continue;
+      const data = await buildBriefing(date, w.lastBriefingSentAt ?? undefined);
+      await sendMail(w.email, `[test] Shiftly briefing — ${data.date}`, briefingHtml(data));
+      sent++;
+    }
+    res.json({
+      date,
+      sent,
+      note:
+        sent === 0
+          ? 'No workers with an email address — add an email at signup to receive briefings'
+          : `Sent to ${sent} worker(s). SMTP must be configured for it to actually deliver.`,
+    });
+  } catch (error) {
+    console.error('Test briefing error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

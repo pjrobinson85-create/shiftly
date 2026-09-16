@@ -9,22 +9,25 @@ async function main() {
 
   // Create family user
   const family = await prisma.user.upsert({
-    where: { email: 'family@shiftly.test' },
+    where: { username: 'family' },
     update: {},
     create: {
+      username: 'family',
       email: 'family@shiftly.test',
       name: 'Paul',
       role: 'FAMILY',
       password: hashedPassword,
       phone: '+61 400 000 000',
+      isAdmin: true,
     },
   });
 
   // Create worker user
   const worker = await prisma.user.upsert({
-    where: { email: 'worker@shiftly.test' },
+    where: { username: 'sarah' },
     update: {},
     create: {
+      username: 'sarah',
       email: 'worker@shiftly.test',
       name: 'Sarah',
       role: 'WORKER',

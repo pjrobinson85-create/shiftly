@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { AuthRequest, requireAuth, requireRole } from '../middleware/auth';
+import { AuthRequest, requireAuth, requireRole, getUserPermissions } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import { serializeCareProfile, validateCareProfilePayload } from '../lib/care-profile';
 
@@ -32,11 +32,32 @@ router.get('/', async (req: AuthRequest, res) => {
   }
 });
 
-router.put('/', requireRole('FAMILY'), async (req: AuthRequest, res) => {
+router.put('/', async (req: AuthRequest, res) => {
   try {
+    // Care-plan edits: admin, or a user explicitly granted the canEditCarePlan
+    // flag (granted from the admin panel without full admin rights).
+    const perms = await getUserPermissions(req.user!.id);
+    if (!perms.isAdmin && !perms.canEditCarePlan) {
+      return res
+        .status(403)
+        .json({ error: 'You are not allowed to edit the care plan. Ask a family admin to grant you access.' });
+    }
+
     const validation = validateCareProfilePayload(req.body as Record<string, unknown>);
     if (!validation.ok) {
       return res.status(400).json({ error: validation.error });
+    }
+
+    // H2 protection: internalNotes are family-confidential. A non-FAMILY
+    // editor (e.g. a worker granted canEditCarePlan) can update clinical
+    // fields but must NOT overwrite the internal notes — preserve whatever
+    // is stored rather than accepting (usually blank) client input.
+    const isFamilyOrAdmin = req.user!.role === 'FAMILY' || perms.isAdmin;
+    if (!isFamilyOrAdmin) {
+      const existing = await prisma.careProfile.findUnique({
+        where: { id: CARE_PROFILE_ID },
+      });
+      validation.data.internalNotes = existing?.internalNotes ?? null;
     }
 
     const profile = await prisma.careProfile.upsert({

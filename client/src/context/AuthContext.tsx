@@ -3,27 +3,32 @@ import api from '../api/client';
 
 interface User {
   id: string;
-  email: string;
+  username: string;
+  email?: string | null;
   name: string;
   role: 'FAMILY' | 'WORKER';
+  isAdmin?: boolean;
+  canEditCarePlan?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
 }
 
 interface RegisterData {
-  email: string;
+  username: string;
   password: string;
   name: string;
   role: 'FAMILY' | 'WORKER';
+  email?: string;
   phone?: string;
   inviteCode?: string;
+  confirmPassword?: string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -53,8 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, [token]);
 
-  const login = async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password });
+  const login = async (username: string, password: string) => {
+    const { data } = await api.post('/auth/login', { username, password });
     localStorage.setItem('shiftly_token', data.accessToken);
     setToken(data.accessToken);
     setUser(data.user);

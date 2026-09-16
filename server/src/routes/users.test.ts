@@ -20,9 +20,9 @@ describe('User routes (assignee picker)', () => {
     const res = await request(app).get('/api/users').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
-    const emails = res.body.map((u: { email: string }) => u.email);
-    expect(emails).toContain('family@shiftly.test');
-    expect(emails).toContain('worker@shiftly.test');
+    const names = res.body.map((u: { name: string }) => u.name);
+    expect(names).toContain('Paul');
+    expect(names).toContain('Sarah');
     // each entry carries the fields the picker needs
     const first = res.body[0];
     expect(first).toHaveProperty('id');

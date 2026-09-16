@@ -39,7 +39,7 @@ describe('Export routes (NDIS CSV)', () => {
         severity: 'medium',
         photos: [],
         occurredAt: new Date(),
-        userId: (await prisma.user.findUnique({ where: { email: 'worker@shiftly.test' } }))!.id,
+        userId: (await prisma.user.findUnique({ where: { username: 'sarah' } }))!.id,
       },
     });
 
@@ -66,7 +66,7 @@ describe('Export routes (NDIS CSV)', () => {
     const token = await workerToken();
 
     // Write our own audit entry so this test is independent of test-file ordering
-    const workerId = (await prisma.user.findUnique({ where: { email: 'worker@shiftly.test' } }))!.id;
+    const workerId = (await prisma.user.findUnique({ where: { username: 'sarah' } }))!.id;
     const log = await prisma.auditLog.create({
       data: {
         action: 'task.completed',

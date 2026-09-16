@@ -46,8 +46,9 @@ router.get('/', async (req: AuthRequest, res) => {
   }
 });
 
-// POST /api/tasks — create an ad-hoc task (FAMILY only)
-router.post('/', requireRole('FAMILY'), async (req: AuthRequest, res) => {
+// POST /api/tasks — create an ad-hoc task (any authenticated user; the
+// creator is recorded via createdBy and shown next to the task)
+router.post('/', async (req: AuthRequest, res) => {
   try {
     const body = req.body as {
       title: string;
@@ -159,7 +160,7 @@ router.patch('/:id/complete', async (req: AuthRequest, res) => {
     // URGENT task completed → ping the family so they know it's handled
     if (task.priority === 'URGENT') {
       void sendAlert(
-        `✅ <b>Urgent task completed</b>\n${task.title}\nby ${req.user!.email} · ${new Date().toLocaleString('en-AU', { timeZone: 'Australia/Brisbane' })}`
+        `✅ <b>Urgent task completed</b>\n${task.title}\nby ${req.user!.username} · ${new Date().toLocaleString('en-AU', { timeZone: 'Australia/Brisbane' })}`
       );
     }    getSocket().emit('task:completed', task);
 

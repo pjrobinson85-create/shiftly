@@ -53,7 +53,8 @@ describe('Calendar routes', () => {
     const token = await familyToken();
     const res = await request(app).post('/api/calendar/sync').set('Authorization', `Bearer ${token}`).send({});
     expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/connection/i);
+    // M9: message was reworded to mention the manual "Add event" fallback.
+    expect(res.body.error).toMatch(/not connected/i);
   });
 
   it('GET /api/calendar/status requires auth', async () => {

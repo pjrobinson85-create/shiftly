@@ -159,6 +159,139 @@ router.get('/callback', requireRole('FAMILY'), async (req: AuthRequest, res) => 
   }
 });
 
+// POST /api/calendar/events — manually add a calendar event (FAMILY or admin).
+// Stored with googleId null; Google sync never touches manual events.
+router.post('/events', requireRole('FAMILY'), async (req: AuthRequest, res) => {
+  try {
+    const body = req.body as {
+      title?: string;
+      startTime?: string;
+      endTime?: string;
+      description?: string;
+      location?: string;
+    };
+
+    if (!body.title?.trim()) return res.status(400).json({ error: 'Event title is required' });
+    if (!body.startTime) return res.status(400).json({ error: 'startTime is required' });
+
+    const start = new Date(body.startTime);
+    if (isNaN(start.getTime())) return res.status(400).json({ error: 'startTime is invalid' });
+    const end = body.endTime ? new Date(body.endTime) : null;
+    if (end && isNaN(end.getTime())) return res.status(400).json({ error: 'endTime is invalid' });
+    if (end && end < start) return res.status(400).json({ error: 'endTime must be after startTime' });
+
+    const event = await prisma.calendarEvent.create({
+      data: {
+        googleId: null,
+        title: body.title.trim(),
+        startTime: start,
+        endTime: end,
+        description: body.description?.trim() || null,
+        location: body.location?.trim() || null,
+      },
+    });
+
+    await logAudit(
+      {
+        userId: req.user!.id,
+        action: 'calendar.manual_created',
+        entity: 'calendar',
+        entityId: event.id,
+        detail: `Manually added "${event.title}" at ${start.toISOString()}`,
+      },
+      req
+    );
+
+    res.status(201).json(event);
+  } catch (error) {
+    console.error('Create calendar event error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /api/calendar/events/:id — manually update an event (FAMILY or admin)
+router.put('/events/:id', requireRole('FAMILY'), async (req: AuthRequest, res) => {
+  try {
+    const existing = await prisma.calendarEvent.findUnique({
+      where: { id: String(req.params.id) },
+    });
+    if (!existing) return res.status(404).json({ error: 'Event not found' });
+
+    const body = req.body as {
+      title?: string;
+      startTime?: string;
+      endTime?: string;
+      description?: string | null;
+      location?: string | null;
+    };
+
+    const data: Record<string, unknown> = {};
+    if (body.title !== undefined) {
+      if (!body.title.trim()) return res.status(400).json({ error: 'Event title is required' });
+      data.title = body.title.trim();
+    }
+    if (body.startTime !== undefined) {
+      const d = new Date(body.startTime);
+      if (isNaN(d.getTime())) return res.status(400).json({ error: 'startTime is invalid' });
+      data.startTime = d;
+    }
+    if (body.endTime !== undefined) {
+      data.endTime = body.endTime ? new Date(body.endTime) : null;
+    }
+    if (body.description !== undefined) data.description = body.description?.trim() || null;
+    if (body.location !== undefined) data.location = body.location?.trim() || null;
+
+    const updated = await prisma.calendarEvent.update({
+      where: { id: existing.id },
+      data,
+    });
+
+    await logAudit(
+      {
+        userId: req.user!.id,
+        action: 'calendar.manual_updated',
+        entity: 'calendar',
+        entityId: updated.id,
+        detail: `Updated "${updated.title}": ${Object.keys(data).join(', ')}`,
+      },
+      req
+    );
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Update calendar event error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /api/calendar/events/:id — manually remove an event (FAMILY or admin)
+router.delete('/events/:id', requireRole('FAMILY'), async (req: AuthRequest, res) => {
+  try {
+    const existing = await prisma.calendarEvent.findUnique({
+      where: { id: String(req.params.id) },
+    });
+    if (!existing) return res.status(404).json({ error: 'Event not found' });
+
+    await prisma.calendarEvent.delete({ where: { id: existing.id } });
+
+    await logAudit(
+      {
+        userId: req.user!.id,
+        action: 'calendar.manual_deleted',
+        entity: 'calendar',
+        entityId: existing.id,
+        detail: `Deleted "${existing.title}"`,
+      },
+      req
+    );
+
+    res.status(204).end();
+  } catch (error) {
+    console.error('Delete calendar event error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST /api/calendar/sync — manually trigger sync (FAMILY only)
 router.post('/sync', requireRole('FAMILY'), async (req: AuthRequest, res) => {
   try {
@@ -166,7 +299,9 @@ router.post('/sync', requireRole('FAMILY'), async (req: AuthRequest, res) => {
     const stored = readStoredCreds();
     const refreshToken = stored?.refresh_token || process.env.GOOGLE_REFRESH_TOKEN;
     if (!refreshToken) {
-      return res.status(400).json({ error: 'No Google Calendar connection. Use the connect flow in Settings first.' });
+      return res
+        .status(400)
+        .json({ error: 'Google Calendar is not connected. You can still add events manually with "Add event".' });
     }
 
     const oauth2Client = getOauth2Client();

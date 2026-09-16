@@ -10,7 +10,10 @@ router.get('/', async (_req: AuthRequest, res) => {
   try {
     const lists = await prisma.shoppingList.findMany({
       include: {
-        items: { orderBy: { createdAt: 'asc' } },
+        items: {
+          include: { addedBy: { select: { id: true, name: true, role: true } } },
+          orderBy: { createdAt: 'asc' },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -77,6 +80,7 @@ router.post('/:listId/items', async (req: AuthRequest, res) => {
         listId,
         addedById: req.user?.id,
       },
+      include: { addedBy: { select: { id: true, name: true, role: true } } },
     });
     res.status(201).json(item);
   } catch (error) {

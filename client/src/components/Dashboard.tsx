@@ -35,6 +35,9 @@ export default function Dashboard() {
               <SidebarLink to="/calendar" label="Calendar" dark={dark} />
             </>
           )}
+          {user?.isAdmin && (
+            <SidebarLink to="/admin" label="Admin" dark={dark} />
+          )}
         </nav>
       </aside>
 

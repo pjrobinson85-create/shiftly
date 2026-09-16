@@ -29,13 +29,17 @@ describe('Task routes', () => {
     expect(res.status).toBe(400);
   });
 
-  it('POST /api/tasks by a WORKER is forbidden (FAMILY only)', async () => {
+  it('POST /api/tasks by a WORKER is allowed and records the worker as creator', async () => {
     const token = await workerToken();
     const res = await request(app)
       .post('/api/tasks')
       .set('Authorization', `Bearer ${token}`)
-      .send({ title: 'Should not work', dueDate: new Date().toISOString() });
-    expect(res.status).toBe(403);
+      .send({ title: 'Worker-created task', dueDate: new Date().toISOString() });
+    expect(res.status).toBe(201);
+    // M10: any authenticated user can create tasks; creator is recorded.
+    // (TASK_INCLUDE exposes name/role, not username, on createdBy.)
+    expect(res.body.createdBy?.name).toBe('Sarah');
+    expect(res.body.createdBy?.role).toBe('WORKER');
   });
 
   it('POST /api/tasks creates a task and returns it', async () => {

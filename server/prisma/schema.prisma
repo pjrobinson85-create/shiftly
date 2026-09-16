@@ -21,13 +21,19 @@ enum TaskPriority {
 }
 
 // Users (family members and support workers)
+// Login is by a short unique `username` (stored lowercase), not email.
+// `email` is optional contact info only — some workers prefer not to share it.
 model User {
   id        String   @id @default(uuid())
-  email     String   @unique
+  username  String?  @unique // short login key (lowercase), e.g. "paul". Nullable for legacy rows until backfilled.
+  email     String?  // optional contact (not used for login); WORKER signups use it for pre-shift briefings
   password  String   // bcrypt hashed
   name      String
   role      UserRole @default(WORKER)
   phone     String?
+  isAdmin          Boolean   @default(false) // full control: user management, all admin panel powers
+  canEditCarePlan  Boolean   @default(false) // grant without making the person an admin
+  lastBriefingSentAt DateTime? // set when the daily pre-shift briefing email was delivered
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -176,7 +182,7 @@ model ShoppingListItem {
 // Calendar events (synced from Google Calendar)
 model CalendarEvent {
   id          String   @id @default(uuid())
-  googleId    String   @unique // Google Calendar event ID
+  googleId    String?  @unique // Google Calendar event ID; null for manually created events
   title       String
   startTime   DateTime
   endTime     DateTime?
