@@ -4,7 +4,23 @@ import { app } from '../index';
 import { familyToken, workerToken } from '../test/helpers';
 import prisma from '../lib/prisma';
 
-const today = new Date().toISOString().split('T')[0];
+// AEST "YYYY-MM-DD" N days from today AEST, plus an ISO instant for that
+// shift-day's midday. The suite runs under TZ=Australia/Brisbane (vitest
+// config), but the route's past-date guard is AEST-based — using UTC
+// "today" would make a test flaky between 12:00–10:00 AEST.
+function aestDateIn(days: number): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Australia/Brisbane',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(Date.now() + days * 86400000));
+}
+function middayAESTIn(days: number): string {
+  return new Date(`${aestDateIn(days)}T12:00:00+10:00`).toISOString();
+}
+
+const today = aestDateIn(0);
 
 describe('Task routes', () => {
   it('GET /api/tasks requires auth', async () => {
@@ -34,7 +50,7 @@ describe('Task routes', () => {
     const res = await request(app)
       .post('/api/tasks')
       .set('Authorization', `Bearer ${token}`)
-      .send({ title: 'Worker-created task', dueDate: new Date().toISOString() });
+      .send({ title: 'Worker-created task', dueDate: middayAESTIn(0) });
     expect(res.status).toBe(201);
     // M10: any authenticated user can create tasks; creator is recorded.
     // (TASK_INCLUDE exposes name/role, not username, on createdBy.)
@@ -50,11 +66,49 @@ describe('Task routes', () => {
       .send({
         title: `Test task ${Date.now()}`,
         description: 'created by test suite',
-        dueDate: new Date().toISOString(),
+        dueDate: middayAESTIn(0),
       });
     expect(res.status).toBe(201);
     expect(res.body.title).toBeTruthy();
     expect(res.body.id).toBeTruthy();
+  });
+
+  it('POST /api/tasks accepts a future shift date (e.g. tomorrow) and it lists under that day', async () => {
+    const family = await familyToken();
+    const title = `Washing for tomorrow ${Date.now()}`;
+    const created = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${family}`)
+      .send({ title, dueDate: middayAESTIn(1) });
+    expect(created.status).toBe(201);
+    const tomorrow = aestDateIn(1);
+
+    // …and it appears when the family lists tomorrow's tasks…
+    const tomorrows = await request(app)
+      .get(`/api/tasks?date=${tomorrow}`)
+      .set('Authorization', `Bearer ${family}`);
+    expect(tomorrows.status).toBe(200);
+    expect(tomorrows.body.map((t: { title: string }) => t.title)).toContain(title);
+
+    // …and NOT in today's list.
+    const todays = await request(app)
+      .get(`/api/tasks?date=${today}`)
+      .set('Authorization', `Bearer ${family}`);
+    expect(todays.status).toBe(200);
+    expect(todays.body.map((t: { title: string }) => t.title)).not.toContain(title);
+
+    await request(app).delete(`/api/tasks/${created.body.id}`).set('Authorization', `Bearer ${family}`);
+  });
+
+  it('POST /api/tasks rejects a past date', async () => {
+    const token = await familyToken();
+    const yesterday = new Date(`${aestDateIn(0)}T12:00:00+10:00`).getTime() - 86400000;
+    const res = await request(app)
+      .post('/api/tasks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Late task', dueDate: new Date(yesterday).toISOString() });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/past/);
   });
 
   it('PATCH /api/tasks/:id/assign assigns to a user', async () => {
@@ -64,7 +118,7 @@ describe('Task routes', () => {
     const created = await request(app)
       .post('/api/tasks')
       .set('Authorization', `Bearer ${family}`)
-      .send({ title: `Assign test ${Date.now()}`, dueDate: new Date().toISOString() });
+      .send({ title: `Assign test ${Date.now()}`, dueDate: middayAESTIn(0) });
     expect(created.status).toBe(201);
 
     const workerMe = await request(app)
@@ -98,7 +152,7 @@ describe('Task routes', () => {
     const created = await request(app)
       .post('/api/tasks')
       .set('Authorization', `Bearer ${family}`)
-      .send({ title: `Complete test ${Date.now()}`, dueDate: new Date().toISOString(), priority: 'NORMAL' });
+      .send({ title: `Complete test ${Date.now()}`, dueDate: middayAESTIn(0), priority: 'NORMAL' });
 
     const done = await request(app)
       .patch(`/api/tasks/${created.body.id}/complete`)
@@ -121,7 +175,7 @@ describe('Task routes', () => {
     const created = await request(app)
       .post('/api/tasks')
       .set('Authorization', `Bearer ${family}`)
-      .send({ title: `Delete test ${Date.now()}`, dueDate: new Date().toISOString() });
+      .send({ title: `Delete test ${Date.now()}`, dueDate: middayAESTIn(0) });
 
     const del = await request(app)
       .delete(`/api/tasks/${created.body.id}`)
@@ -137,7 +191,7 @@ describe('Task routes', () => {
     const created = await request(app)
       .post('/api/tasks')
       .set('Authorization', `Bearer ${family}`)
-      .send({ title: `Audit test ${Date.now()}`, dueDate: new Date().toISOString() });
+      .send({ title: `Audit test ${Date.now()}`, dueDate: middayAESTIn(0) });
 
     await request(app)
       .patch(`/api/tasks/${created.body.id}/complete`)

@@ -35,6 +35,18 @@ function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
+// "Today" in AEST (the app's timezone). NOT toISOString() — that's UTC,
+// which lags AEST by 10h: between 12:00–10:00 AEST the UTC date is still
+// the previous day, which would file tasks under the wrong shift.
+function todayAEST(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Australia/Brisbane',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
 function formatDisplayDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -50,7 +62,7 @@ const PRIORITY_COLORS = {
 export default function TasksPage() {
   const { user } = useAuth();
   const { dark } = useTheme();
-  const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
+  const [selectedDate, setSelectedDate] = useState(todayAEST());
   const [tasks, setTasks] = useState<TaskInstance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -61,13 +73,15 @@ export default function TasksPage() {
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPriority, setNewPriority] = useState<'NORMAL' | 'URGENT'>('NORMAL');
+  const [newDate, setNewDate] = useState(todayAEST());
   const [addingTask, setAddingTask] = useState(false);
 
-  const fetchTasks = useCallback(async () => {
+  const fetchTasks = useCallback(async (dateOverride?: string) => {
+    const date = dateOverride ?? selectedDate;
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.get<TaskInstance[]>(`/tasks?date=${selectedDate}`);
+      const { data } = await api.get<TaskInstance[]>(`/tasks?date=${date}`);
       const sorted = [...data].sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         if (a.priority !== b.priority) return a.priority === 'URGENT' ? -1 : 1;
@@ -157,20 +171,25 @@ export default function TasksPage() {
     e.preventDefault();
     if (!newTitle.trim()) return;
     setAddingTask(true);
+    setError('');
     try {
       await api.post('/tasks', {
         title: newTitle.trim(),
         description: newDesc.trim() || undefined,
         priority: newPriority,
-        dueDate: new Date(selectedDate + 'T12:00:00').toISOString(),
+        dueDate: new Date(newDate + 'T12:00:00+10:00').toISOString(),
       });
       setNewTitle('');
       setNewDesc('');
       setNewPriority('NORMAL');
+      setNewDate(todayAEST());
       setShowAddForm(false);
-      fetchTasks();
-    } catch {
-      setError('Failed to add task.');
+      // If the task was filed for another day, jump there so it's visible.
+      if (newDate !== selectedDate) setSelectedDate(newDate);
+      fetchTasks(newDate);
+    } catch (err) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setError(msg || 'Failed to add task.');
     } finally {
       setAddingTask(false);
     }
@@ -180,13 +199,31 @@ export default function TasksPage() {
   const totalCount = tasks.length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const today = formatDate(new Date());
+  const today = todayAEST();
   const isToday = selectedDate === today;
 
+  function addDaysAEST(dateStr: string, days: number): string {
+    const d = new Date(dateStr + 'T00:00:00+10:00');
+    d.setDate(d.getDate() + days);
+    // en-CA emits "YYYY-MM-DD" in AEST
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Australia/Brisbane',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(d);
+  }
+  const tomorrow = addDaysAEST(today, 1);
+
+  // Human label for the picked due date: "Today", "Tomorrow", or "Thu 25 Sep".
+  function dueDateLabel(dateStr: string): string {
+    if (dateStr === today) return 'Today';
+    if (dateStr === tomorrow) return 'Tomorrow';
+    return formatDisplayDate(dateStr);
+  }
+
   function shiftDay(delta: number) {
-    const d = new Date(selectedDate + 'T00:00:00');
-    d.setDate(d.getDate() + delta);
-    setSelectedDate(formatDate(d));
+    setSelectedDate(addDaysAEST(selectedDate, delta));
   }
 
   return (
@@ -264,8 +301,35 @@ export default function TasksPage() {
               &nbsp;Urgent
             </label>
           </div>
-          <button type="submit" disabled={addingTask} style={styles.submitBtn()}>
-            {addingTask ? 'Adding...' : 'Add Task'}
+          <div style={styles.dateRow(dark)}>
+            <label style={styles.formDateLabel()}>For shift</label>
+            <input
+              style={styles.dateInput(dark)}
+              type="date"
+              value={newDate}
+              min={today}
+              onChange={e => setNewDate(e.target.value || today)}
+              required
+            />
+            <div style={styles.dateQuickPicks()}>
+              <button
+                type="button"
+                style={{ ...styles.datePickBtn(dark), ...(newDate === today ? styles.datePickBtnActive(dark) : {}) }}
+                onClick={() => setNewDate(today)}
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                style={{ ...styles.datePickBtn(dark), ...(newDate === tomorrow ? styles.datePickBtnActive(dark) : {}) }}
+                onClick={() => setNewDate(tomorrow)}
+              >
+                Tomorrow
+              </button>
+            </div>
+          </div>
+          <button type="submit" disabled={addingTask || !newDate} style={styles.submitBtn()}>
+            {addingTask ? 'Adding...' : `Add Task — ${dueDateLabel(newDate)}`}
           </button>
         </form>
       )}
@@ -511,6 +575,48 @@ const styles = {
     alignItems: 'center',
     cursor: 'pointer',
     gap: '0.25rem',
+  }),
+  dateRow: (dark) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.4rem',
+  }),
+  formDateLabel: () => ({
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: 'var(--muted)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.04em',
+  }),
+  dateInput: (dark) => ({
+    padding: '0.55rem 0.8rem',
+    border: '1px solid var(--border)',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    background: 'var(--surface)',
+    color: 'var(--text)',
+    width: '100%',
+    boxSizing: 'border-box',
+  }),
+  dateQuickPicks: () => ({
+    display: 'flex',
+    gap: '0.5rem',
+  }),
+  datePickBtn: (dark) => ({
+    flex: 1,
+    padding: '0.45rem 0.75rem',
+    border: '1px solid var(--border)',
+    borderRadius: '8px',
+    background: 'var(--surface)',
+    color: 'var(--text-2)',
+    fontSize: '0.85rem',
+    cursor: 'pointer',
+  }),
+  datePickBtnActive: (dark) => ({
+    border: '1px solid var(--brand)',
+    color: 'var(--brand-text)',
+    background: 'var(--brand-soft)',
+    fontWeight: 600,
   }),
   submitBtn: () => ({
     background: 'var(--brand)',

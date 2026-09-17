@@ -4,6 +4,7 @@ import prisma from '../lib/prisma';
 import { logAudit } from '../lib/audit';
 import { sendAlert } from '../lib/telegram';
 import { getSocket } from '../lib/socket';
+import { aestDate } from '../lib/briefing';
 
 const router = Router();
 
@@ -15,19 +16,22 @@ const TASK_INCLUDE = {
   assignedTo: { select: { id: true, name: true, role: true } },
 } as const;
 
-// GET /api/tasks — list tasks for a date (default: today)
+// GET /api/tasks — list tasks for a date (default: today AEST)
 // Optional: ?assignedToMe=true → only tasks assigned to (or unassigned) this user
 router.get('/', async (req: AuthRequest, res) => {
   try {
-    const dateStr = (req.query.date as string) || new Date().toISOString().split('T')[0];
-    const [year, month, day] = dateStr.split('-').map(Number);
-    if (!year || !month || !day) {
+    const dateStr = (req.query.date as string) || aestDate();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
       return res.status(400).json({ error: 'Invalid date, expected YYYY-MM-DD' });
     }
-    const startOfDay = new Date(year, month - 1, day, 0, 0, 0);
-    const endOfDay = new Date(year, month - 1, day, 23, 59, 59);
+    // Explicit AEST window — same convention as /api/shifts (M5). The old
+    // code computed the window from server-local midnight: correct today
+    // only because the host happens to run AEST, and it defaulted "today"
+    // to the UTC date, which lags AEST by 10h (midnight–10am → yesterday).
+    const startOfDay = new Date(`${dateStr}T00:00:00+10:00`);
+    const endOfDay = new Date(startOfDay.getTime() + 24 * 3600 * 1000);
 
-    const where: Record<string, unknown> = { dueDate: { gte: startOfDay, lte: endOfDay } };
+    const where: Record<string, unknown> = { dueDate: { gte: startOfDay, lt: endOfDay } };
     if (req.query.assignedToMe === 'true') {
       where.OR = [{ assignedToId: req.user!.id }, { assignedToId: null }];
     }
@@ -62,6 +66,12 @@ router.post('/', async (req: AuthRequest, res) => {
     if (!body.dueDate) return res.status(400).json({ error: 'dueDate is required' });
     const dueDate = new Date(body.dueDate);
     if (isNaN(dueDate.getTime())) return res.status(400).json({ error: 'dueDate is invalid' });
+    // Tasks are filed against a shift-day, and a shift in the past can't be
+    // worked: reject dates before today AEST ("buy the washing for tomorrow"
+    // is fine, "buy the washing for yesterday" is not).
+    if (aestDate(dueDate) < aestDate()) {
+      return res.status(400).json({ error: 'dueDate can\u2019t be in the past — pick today or a future shift' });
+    }
 
     if (body.assignedToId) {
       const assignee = await prisma.user.findUnique({ where: { id: body.assignedToId } });
