@@ -185,9 +185,9 @@ export default function ShoppingListPage() {
       <div style={styles.headerRow}>
         <div>
           <h2 style={styles.pageTitle}>Shopping List</h2>
-          <p style={styles.subtitle}>Shared list for the household</p>
+          <p style={styles.subtitle}>Shared list for the household — add anything that's needed</p>
         </div>
-        {user?.role === 'FAMILY' && (
+        {(user?.role === 'FAMILY' || lists.length === 0) && (
           <button style={styles.btn} onClick={() => setShowNewList(!showNewList)}>
             {showNewList ? '✕ Cancel' : '+ New List'}
           </button>

@@ -6,8 +6,15 @@ const router = Router();
 router.use(requireAuth);
 
 // GET /api/shopping — list all shopping lists
-router.get('/', async (_req: AuthRequest, res) => {
+router.get('/', async (req: AuthRequest, res) => {
   try {
+    // Seed a default household list the first time a FAMILY user opens the
+    // page while none exist — without one, workers see a blank page and
+    // have nowhere to add items (2026-09-17: workers couldn't create lists).
+    const count = await prisma.shoppingList.count();
+    if (count === 0 && req.user?.role === 'FAMILY') {
+      await prisma.shoppingList.create({ data: { name: 'Household Shopping List' } });
+    }
     const lists = await prisma.shoppingList.findMany({
       include: {
         items: {
@@ -24,8 +31,10 @@ router.get('/', async (_req: AuthRequest, res) => {
   }
 });
 
-// POST /api/shopping — create a new list (FAMILY only)
-router.post('/', requireRole('FAMILY'), async (req: AuthRequest, res) => {
+// POST /api/shopping — create a new list (any authenticated user: workers
+// need to be able to set up a list for their shift; deleting lists stays
+// FAMILY-only so only family can remove one).
+router.post('/', async (req: AuthRequest, res) => {
   try {
     const { name, category } = req.body as { name: string; category?: string };
     if (!name?.trim()) {
