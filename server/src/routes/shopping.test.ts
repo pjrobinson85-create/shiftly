@@ -70,6 +70,47 @@ describe('Shopping list access for workers', () => {
     expect(del.status).toBe(200);
   });
 
+  it('WORKER can mark an item complete but cannot delete it (FAMILY-only)', async () => {
+    const fToken = await familyToken();
+    const wToken = await workerToken();
+    const create = await request(app)
+      .post('/api/shopping')
+      .set('Authorization', `Bearer ${fToken}`)
+      .send({ name: `Item Delete Test List ${Date.now()}` });
+    expect(create.status).toBe(201);
+    const listId = create.body.id;
+
+    const add = await request(app)
+      .post(`/api/shopping/${listId}/items`)
+      .set('Authorization', `Bearer ${fToken}`)
+      .send({ name: 'Eggs' });
+    expect(add.status).toBe(201);
+    const itemId = add.body.id;
+
+    // worker can toggle completion — that's the intended worker action
+    const complete = await request(app)
+      .patch(`/api/shopping/items/${itemId}`)
+      .set('Authorization', `Bearer ${wToken}`)
+      .send({ completed: true });
+    expect(complete.status).toBe(200);
+    expect(complete.body.completed).toBe(true);
+
+    // worker cannot delete the item
+    const wDel = await request(app)
+      .delete(`/api/shopping/items/${itemId}`)
+      .set('Authorization', `Bearer ${wToken}`);
+    expect(wDel.status).toBe(403);
+
+    // family can delete it
+    const fDel = await request(app)
+      .delete(`/api/shopping/items/${itemId}`)
+      .set('Authorization', `Bearer ${fToken}`);
+    expect(fDel.status).toBe(200);
+
+    // clean up
+    await prisma.shoppingList.delete({ where: { id: listId } });
+  });
+
   it('GET seeds a default list when none exist (FAMILY triggers, WORKER does not)', async () => {
     // ensure a clean slate
     const lists = await prisma.shoppingList.findMany();

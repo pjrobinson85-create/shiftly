@@ -306,20 +306,23 @@ export default function ShoppingListPage() {
                         added by {item.addedBy.name}
                       </span>
                     )}
-                    <button
-                      style={styles.removeBtn}
-                      onClick={() => deleteItem(activeList.id, item.id)}
-                      title="Remove"
-                    >
-                      ✕
-                    </button>
+                    {/* Workers can mark items done, but only family removes them */}
+                    {user?.role === 'FAMILY' && (
+                      <button
+                        style={styles.removeBtn}
+                        onClick={() => deleteItem(activeList.id, item.id)}
+                        title="Remove"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </li>
                 ))}
             </ul>
           )}
 
-          {/* Clear completed */}
-          {activeList.items.some(i => i.completed) && (
+          {/* Clear completed — family only (bulk delete) */}
+          {user?.role === 'FAMILY' && activeList.items.some(i => i.completed) && (
             <button
               style={styles.clearBtn}
               onClick={() => {

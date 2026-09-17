@@ -115,8 +115,10 @@ router.patch('/items/:itemId', async (req: AuthRequest, res) => {
   }
 });
 
-// DELETE /api/shopping/items/:itemId — remove an item
-router.delete('/items/:itemId', async (req: AuthRequest, res) => {
+// DELETE /api/shopping/items/:itemId — remove an item (FAMILY only).
+// Workers can still mark items complete (PATCH above); only family removes
+// items from the record, so the list's history stays intact.
+router.delete('/items/:itemId', requireRole('FAMILY'), async (req: AuthRequest, res) => {
   try {
     const itemId = String(req.params.itemId);
     await prisma.shoppingListItem.delete({ where: { id: itemId } });
